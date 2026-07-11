@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#08252e">
+<title>Tapis — Routines de yoga</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Spline+Sans:wght@300..700&family=Spline+Sans+Mono:wght@300..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --deep:#08252e;
+  --deep2:#0c313d;
+  --deep3:#123f4d;
+  --aqua:#6fd6c9;
+  --air:#f0b860;
+  --ink:#e8f3f1;
+  --dim:#8fb3ae;
+  --line:rgba(111,214,201,.18);
+  --radius:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Spline Sans',sans-serif;
+  background:var(--deep);
+  color:var(--ink);
+  min-height:100vh;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));
+}
+h1,h2,h3{font-family:'Bricolage Grotesque',sans-serif}
+.mono{font-family:'Spline Sans Mono',monospace}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;padding:34px 20px 60px;overflow:hidden}
+.hero h1{font-size:2rem;font-weight:750;letter-spacing:-.02em}
+.hero h1 span{color:var(--aqua)}
+.hero p{color:var(--dim);margin-top:6px;font-size:.95rem;max-width:32ch}
+.waves{position:absolute;left:0;right:0;bottom:-2px;height:46px;pointer-events:none}
+.waves svg{display:block;width:200%;height:100%;animation:drift 14s linear infinite}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.waves svg{animation:none}}
+
+/* ---------- Onglets ---------- */
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:flex;background:rgba(8,37,46,.92);backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tab{flex:1;padding:12px 4px 10px;text-align:center;color:var(--dim);font-size:.72rem;font-weight:600;letter-spacing:.04em}
+.tab .ic{display:block;font-size:1.25rem;margin-bottom:2px}
+.tab.on{color:var(--aqua)}
+.panel{display:none;padding:0 16px}
+.panel.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- Cartes / sections ---------- */
+.card{
+  background:var(--deep2);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;
+}
+.card h2{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.card .sub{color:var(--dim);font-size:.85rem;margin-top:3px}
+.meta{color:var(--dim);font-size:.78rem}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--aqua);color:var(--deep);font-weight:700;font-size:.95rem;
+  border-radius:999px;padding:12px 22px;transition:transform .12s ease;
+}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:transparent;color:var(--aqua);border:1px solid var(--aqua)}
+.btn.small{padding:8px 14px;font-size:.82rem}
+.btn.gold{background:var(--air)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* ---------- Sections Ashtanga ---------- */
+.sec-head{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 2px;text-align:left;border-bottom:1px solid var(--line);
+}
+.sec-head h3{font-size:1rem;font-weight:700}
+.sec-head .meta{margin-top:2px}
+.chev{color:var(--aqua);transition:transform .2s ease;font-size:1.1rem}
+.sec.open .chev{transform:rotate(90deg)}
+.sec-body{display:none;padding:6px 0 12px}
+.sec.open .sec-body{display:block}
+.pose{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 2px;border-bottom:1px dashed rgba(111,214,201,.1);font-size:.9rem;
+}
+.pose:last-child{border-bottom:none}
+.pose .fr{color:var(--dim);font-size:.76rem;display:block;margin-top:1px}
+.pose .b{color:var(--air);font-size:.78rem;white-space:nowrap}
+.addbtn{
+  color:var(--aqua);border:1px solid var(--line);border-radius:999px;
+  width:30px;height:30px;font-size:1.1rem;line-height:1;flex:none;
+}
+
+/* ---------- Routines ---------- */
+.routine{position:relative}
+.badge{
+  display:inline-block;background:var(--deep3);color:var(--aqua);
+  font-size:.72rem;font-weight:700;letter-spacing:.06em;
+  border-radius:999px;padding:4px 10px;margin-bottom:8px;
+}
+.routine ul{list-style:none;margin:10px 0 14px;color:var(--dim);font-size:.85rem}
+.routine li{padding:3px 0}
+.routine li::before{content:"◦ ";color:var(--aqua)}
+
+/* ---------- Séquenceur ---------- */
+.seq-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--deep3);border-radius:12px;padding:10px 12px;margin-bottom:8px;
+}
+.seq-item .nm{flex:1;font-size:.88rem;min-width:0}
+.seq-item .nm small{display:block;color:var(--dim);font-size:.72rem}
+.seq-item .ctrl{display:flex;gap:4px}
+.seq-item .ctrl button{
+  width:32px;height:32px;border-radius:8px;background:var(--deep2);
+  color:var(--aqua);font-size:.95rem;
+}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:28px;height:28px;border-radius:8px;background:var(--deep2);color:var(--air);font-weight:700}
+.stepper span{min-width:2ch;text-align:center;font-size:.85rem}
+.empty{color:var(--dim);text-align:center;padding:26px 10px;font-size:.9rem}
+input[type=text]{
+  width:100%;background:var(--deep3);border:1px solid var(--line);border-radius:12px;
+  color:var(--ink);font-family:inherit;font-size:.95rem;padding:11px 14px;
+}
+select{
+  background:var(--deep3);border:1px solid var(--line);border-radius:10px;
+  color:var(--ink);font-family:inherit;font-size:.88rem;padding:8px 10px;
+}
+.saved{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px;border-bottom:1px dashed rgba(111,214,201,.1)}
+
+/* ---------- Lecteur ---------- */
+#player{
+  position:fixed;inset:0;z-index:100;background:var(--deep);
+  display:none;flex-direction:column;align-items:center;
+  padding:calc(16px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+}
+#player.on{display:flex}
+.p-top{width:100%;display:flex;justify-content:space-between;align-items:center}
+.p-title{font-size:.8rem;color:var(--dim);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.p-close{color:var(--dim);font-size:1.5rem;padding:4px 10px}
+.p-prog{width:100%;height:4px;background:var(--deep3);border-radius:2px;margin:12px 0;overflow:hidden}
+.p-prog i{display:block;height:100%;background:var(--aqua);width:0%;transition:width .4s ease}
+.p-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%}
+.breath{
+  position:relative;width:230px;height:230px;display:flex;align-items:center;justify-content:center;margin-bottom:26px;
+}
+.breath .ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:2px solid var(--line);
+}
+.breath .orb{
+  position:absolute;width:60%;height:60%;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(111,214,201,.55), rgba(111,214,201,.12) 70%);
+  box-shadow:0 0 60px rgba(111,214,201,.25);
+  transform:scale(.7);
+}
+.breath .orb.anim{animation:resp var(--cad,5s) ease-in-out infinite alternate}
+@keyframes resp{from{transform:scale(.62)}to{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.breath .orb.anim{animation:none;transform:scale(.85)}}
+.breath .count{position:relative;font-size:3.4rem;font-weight:700;font-family:'Spline Sans Mono',monospace}
+.p-pose{font-family:'Bricolage Grotesque',sans-serif;font-size:1.5rem;font-weight:750;line-height:1.15;max-width:22ch}
+.p-fr{color:var(--dim);font-size:.9rem;margin-top:6px}
+.p-side{color:var(--air);font-size:.82rem;font-weight:700;margin-top:8px;letter-spacing:.08em;text-transform:uppercase;min-height:1.2em}
+.p-next{color:var(--dim);font-size:.82rem;margin-top:18px}
+.p-next b{color:var(--ink);font-weight:600}
+.p-ctrl{display:flex;gap:14px;align-items:center;margin-top:10px}
+.p-ctrl .big{
+  width:72px;height:72px;border-radius:50%;background:var(--aqua);color:var(--deep);
+  font-size:1.7rem;display:flex;align-items:center;justify-content:center;font-weight:700;
+}
+.p-ctrl .sm{
+  width:52px;height:52px;border-radius:50%;border:1px solid var(--line);color:var(--aqua);font-size:1.15rem;
+}
+#doneMsg{display:none;flex-direction:column;align-items:center;gap:14px}
+#doneMsg h2{font-size:1.6rem}
+#doneMsg .mono{color:var(--aqua)}
+
+/* ---------- Réglages ---------- */
+.settings{display:flex;flex-direction:column;gap:12px}
+.set-row{display:flex;align-items:center;justify-content:space-between;font-size:.9rem}
+.toast{
+  position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--deep3);border:1px solid var(--line);color:var(--ink);
+  border-radius:999px;padding:10px 18px;font-size:.85rem;opacity:0;transition:.25s ease;z-index:90;
+  white-space:nowrap;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+:focus-visible{outline:2px solid var(--air);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Tapis <span>·</span> yoga</h1>
+  <p>Ashtanga série 1, routines courtes et séquences sur mesure. Le souffle donne le rythme.</p>
+  <div class="waves" aria-hidden="true">
+    <svg viewBox="0 0 1200 46" preserveAspectRatio="none">
+      <path d="M0 24 Q75 4 150 24 T300 24 T450 24 T600 24 T750 24 T900 24 T1050 24 T1200 24 V46 H0 Z" fill="#0c313d"/>
+      <path d="M0 32 Q75 16 150 32 T300 32 T450 32 T600 32 T750 32 T900 32 T1050 32 T1200 32 V46 H0 Z" fill="rgba(111,214,201,.14)"/>
+    </svg>
+  </div>
+</header>
+
+<!-- ============ ASHTANGA ============ -->
+<main>
+<section id="panel-ash" class="panel on">
+  <div class="card">
+    <h2>Série 1 · Yoga Chikitsa</h2>
+    <p class="sub">Séquence traditionnelle complète, guidée souffle par souffle.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="playAshtanga('all')">▶ Séance complète</button>
+      <span class="meta" id="ashTotal"></span>
+    </div>
+  </div>
+  <div id="ashSections"></div>
+</section>
+
+<!-- ============ ROUTINES ============ -->
+<section id="panel-rout" class="panel">
+  <div id="routList"></div>
+</section>
+
+<!-- ============ SÉQUENCEUR ============ -->
+<section id="panel-seq" class="panel">
+  <div class="card">
+    <h2>Ma séquence</h2>
+    <p class="sub">Ajoute des postures depuis la bibliothèque, ajuste les souffles, réordonne.</p>
+    <div id="seqList" style="margin-top:12px"><p class="empty">Séquence vide — pioche ci-dessous 👇</p></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="seqPlayBtn" onclick="playCustom()">▶ Lancer</button>
+      <button class="btn ghost small" onclick="saveSeqPrompt()">Enregistrer</button>
+      <button class="btn ghost small" onclick="clearSeq()">Vider</button>
+    </div>
+    <p class="meta" id="seqTotal" style="margin-top:10px"></p>
+  </div>
+
+  <div class="card" id="savedCard" style="display:none">
+    <h2>Séquences enregistrées</h2>
+    <div id="savedList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Bibliothèque</h2>
+    <div class="row" style="margin:10px 0">
+      <select id="libFilter" onchange="renderLib()"></select>
+    </div>
+    <div id="libList"></div>
+  </div>
+</section>
+
+<!-- ============ RÉGLAGES ============ -->
+<section id="panel-set" class="panel">
+  <div class="card settings">
+    <h2>Réglages</h2>
+    <div class="set-row">
+      <span>Cadence du souffle</span>
+      <div class="stepper">
+        <button onclick="chgCad(-1)">−</button>
+        <span class="mono" id="cadVal">5 s</span>
+        <button onclick="chgCad(1)">+</button>
+      </div>
+    </div>
+    <div class="set-row">
+      <span>Gong entre postures</span>
+      <button class="btn ghost small" id="sndBtn" onclick="toggleSnd()">Activé</button>
+    </div>
+    <div class="set-row">
+      <span>Écran allumé pendant la séance</span>
+      <span class="meta" id="wakeInfo">auto</span>
+    </div>
+    <p class="meta">Cadence = durée d'un souffle complet (inspir + expir). 5 souffles à 5 s ≈ 25 s par posture.</p>
+  </div>
+</section>
+</main>
+
+<!-- Barre d'onglets -->
+<nav class="tabs">
+  <button class="tab on" data-p="ash" onclick="showTab('ash')"><span class="ic">🕉️</span>Ashtanga</button>
+  <button class="tab" data-p="rout" onclick="showTab('rout')"><span class="ic">⏱️</span>Routines</button>
+  <button class="tab" data-p="seq" onclick="showTab('seq')"><span class="ic">🧩</span>Séquenceur</button>
+  <button class="tab" data-p="set" onclick="showTab('set')"><span class="ic">⚙️</span>Réglages</button>
+</nav>
+
+<!-- Lecteur -->
+<div id="player" role="dialog" aria-label="Séance en cours">
+  <div class="p-top">
+    <span class="p-title" id="pTitle">Séance</span>
+    <button class="p-close" onclick="stopSession()" aria-label="Fermer">✕</button>
+  </div>
+  <div class="p-prog"><i id="pProg"></i></div>
+
+  <div class="p-main" id="pMain">
+    <div class="breath">
+      <span class="ring"></span>
+      <span class="orb" id="orb"></span>
+      <span class="count mono" id="pCount">5</span>
+    </div>
+    <h2 class="p-pose" id="pPose">—</h2>
+    <p class="p-fr" id="pFr"></p>
+    <p class="p-side" id="pSide"></p>
+    <p class="p-next" id="pNext"></p>
+  </div>
+
+  <div class="p-main" id="doneMsg">
+    <div class="breath"><span class="ring"></span><span class="orb" style="transform:scale(1)"></span><span class="count">🙏</span></div>
+    <h2>Namasté</h2>
+    <p class="mono" id="doneStats"></p>
+    <button class="btn" onclick="stopSession()">Terminer</button>
+  </div>
+
+  <div class="p-ctrl" id="pCtrl">
+    <button class="sm" onclick="prevPose()" aria-label="Posture précédente">⏮</button>
+    <button class="big" id="pPause" onclick="togglePause()" aria-label="Pause">⏸</button>
+    <button class="sm" onclick="nextPose()" aria-label="Posture suivante">⏭</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================
+   DONNÉES — Ashtanga série 1 (Yoga Chikitsa)
+   b = souffles ; sides = posture bilatérale (5 souffles / côté)
+   t = durée fixe en secondes (blocs type Surya)
+===================================================== */
+const ASH = [
+ {id:'surya', name:'Salutations au soleil', poses:[
+   {sk:'Surya Namaskara A — tour 1',fr:'Salutation A',t:60},
+   {sk:'Surya Namaskara A — tour 2',fr:'Salutation A',t:60},
+   {sk:'Surya Namaskara A — tour 3',fr:'Salutation A',t:60},
+   {sk:'Surya Namaskara A — tour 4',fr:'Salutation A',t:60},
+   {sk:'Surya Namaskara A — tour 5',fr:'Salutation A',t:60},
+   {sk:'Surya Namaskara B — tour 1',fr:'Salutation B',t:90},
+   {sk:'Surya Namaskara B — tour 2',fr:'Salutation B',t:90},
+   {sk:'Surya Namaskara B — tour 3',fr:'Salutation B',t:90},
+   {sk:'Surya Namaskara B — tour 4',fr:'Salutation B',t:90},
+   {sk:'Surya Namaskara B — tour 5',fr:'Salutation B',t:90},
+ ]},
+ {id:'debout', name:'Postures debout', poses:[
+   {sk:'Padangusthasana',fr:'Pince, orteils saisis',b:5},
+   {sk:'Pada Hastasana',fr:'Mains sous les pieds',b:5},
+   {sk:'Utthita Trikonasana',fr:'Triangle étiré',b:5,sides:1},
+   {sk:'Parivrtta Trikonasana',fr:'Triangle inversé',b:5,sides:1},
+   {sk:'Utthita Parsvakonasana',fr:'Angle latéral étiré',b:5,sides:1},
+   {sk:'Parivrtta Parsvakonasana',fr:'Angle latéral inversé',b:5,sides:1},
+   {sk:'Prasarita Padottanasana A',fr:'Grand écart flexion A',b:5},
+   {sk:'Prasarita Padottanasana B',fr:'Grand écart flexion B',b:5},
+   {sk:'Prasarita Padottanasana C',fr:'Grand écart flexion C',b:5},
+   {sk:'Prasarita Padottanasana D',fr:'Grand écart flexion D',b:5},
+   {sk:'Parsvottanasana',fr:'Étirement latéral intense',b:5,sides:1},
+   {sk:'Utthita Hasta Padangusthasana',fr:'Équilibre jambe tendue',b:5,sides:1},
+   {sk:'Ardha Baddha Padmottanasana',fr:'Demi-lotus lié debout',b:5,sides:1},
+   {sk:'Utkatasana',fr:'Chaise',b:5},
+   {sk:'Virabhadrasana A',fr:'Guerrier I',b:5,sides:1},
+   {sk:'Virabhadrasana B',fr:'Guerrier II',b:5,sides:1},
+ ]},
+ {id:'assis', name:'Postures assises', poses:[
+   {sk:'Dandasana',fr:'Bâton',b:5},
+   {sk:'Paschimottanasana A',fr:'Pince assise A',b:5},
+   {sk:'Paschimottanasana C',fr:'Pince assise C',b:5},
+   {sk:'Purvattanasana',fr:'Planche inversée',b:5},
+   {sk:'Ardha Baddha Padma Paschimottanasana',fr:'Demi-lotus lié assis',b:5,sides:1},
+   {sk:'Triang Mukha Eka Pada Paschimottanasana',fr:'Pince trois membres',b:5,sides:1},
+   {sk:'Janu Sirsasana A',fr:'Tête au genou A',b:5,sides:1},
+   {sk:'Janu Sirsasana B',fr:'Tête au genou B',b:5,sides:1},
+   {sk:'Janu Sirsasana C',fr:'Tête au genou C',b:5,sides:1},
+   {sk:'Marichyasana A',fr:'Marichi A',b:5,sides:1},
+   {sk:'Marichyasana B',fr:'Marichi B',b:5,sides:1},
+   {sk:'Marichyasana C',fr:'Marichi C — torsion',b:5,sides:1},
+   {sk:'Marichyasana D',fr:'Marichi D — torsion lotus',b:5,sides:1},
+   {sk:'Navasana ×5',fr:'Bateau, 5 répétitions',b:25},
+   {sk:'Bhujapidasana',fr:'Pression des bras',b:5},
+   {sk:'Kurmasana',fr:'Tortue',b:5},
+   {sk:'Supta Kurmasana',fr:'Tortue endormie',b:5},
+   {sk:'Garbha Pindasana',fr:'Embryon',b:5},
+   {sk:'Kukkutasana',fr:'Coq',b:5},
+   {sk:'Baddha Konasana',fr:'Angle lié (papillon)',b:5},
+   {sk:'Upavistha Konasana',fr:'Grand angle assis',b:5},
+   {sk:'Supta Konasana',fr:'Grand angle allongé',b:5},
+   {sk:'Supta Padangusthasana',fr:'Orteil saisi allongé',b:5,sides:1},
+   {sk:'Ubhaya Padangusthasana',fr:'Équilibre deux orteils',b:5},
+   {sk:'Urdhva Mukha Paschimottanasana',fr:'Pince vers le ciel',b:5},
+   {sk:'Setu Bandhasana',fr:'Pont ashtanga',b:5},
+ ]},
+ {id:'finale', name:'Flexions arrière & série finale', poses:[
+   {sk:'Urdhva Dhanurasana ×3',fr:'Roue, 3 répétitions',b:15},
+   {sk:'Paschimottanasana',fr:'Contre-posture, pince',b:10},
+   {sk:'Salamba Sarvangasana',fr:'Chandelle',b:15},
+   {sk:'Halasana',fr:'Charrue',b:8},
+   {sk:'Karnapidasana',fr:'Genoux aux oreilles',b:8},
+   {sk:'Urdhva Padmasana',fr:'Lotus inversé',b:8},
+   {sk:'Pindasana',fr:'Embryon inversé',b:8},
+   {sk:'Matsyasana',fr:'Poisson',b:8},
+   {sk:'Uttana Padasana',fr:'Jambes et bras levés',b:8},
+   {sk:'Sirsasana',fr:'Posture sur la tête',b:15},
+   {sk:'Balasana',fr:'Enfant',b:8},
+   {sk:'Baddha Padmasana',fr:'Lotus lié',b:5},
+   {sk:'Yoga Mudra',fr:'Sceau du yoga',b:10},
+   {sk:'Padmasana',fr:'Lotus',b:10},
+   {sk:'Utplutih',fr:'Lévitation (tolasana)',b:10},
+   {sk:'Savasana',fr:'Relaxation finale',t:300},
+ ]},
+];
+
+/* Routines courtes prédéfinies (références par index de section/posture) */
+function P(sec,idx){ const p=ASH.find(s=>s.id===sec).poses[idx]; return {...p}; }
+const ROUTINES = [
+ {name:'Réveil', badge:'15 MIN', desc:'Mise en route douce : salutations, ouvertures debout, une torsion, repos.',
+  poses:[P('surya',0),P('surya',1),P('surya',5),P('debout',2),P('debout',4),P('debout',6),
+         P('assis',1),P('assis',11),{sk:'Savasana',fr:'Relaxation',t:120}]},
+ {name:'Équilibre', badge:'30 MIN', desc:'Salutations complètes, socle debout, premières assises, finale courte.',
+  poses:[P('surya',0),P('surya',1),P('surya',2),P('surya',5),P('surya',6),
+         P('debout',0),P('debout',2),P('debout',3),P('debout',4),P('debout',6),P('debout',8),P('debout',10),P('debout',13),
+         P('assis',0),P('assis',1),P('assis',6),P('assis',11),P('assis',19),
+         P('finale',1),{sk:'Savasana',fr:'Relaxation',t:180}]},
+ {name:'Série condensée', badge:'45 MIN', desc:'L\u2019essentiel de la série 1 quand le temps manque : debout complet, assises clés, finale.',
+  poses:[P('surya',0),P('surya',1),P('surya',2),P('surya',5),P('surya',6),P('surya',7),
+         P('debout',0),P('debout',1),P('debout',2),P('debout',3),P('debout',4),P('debout',5),P('debout',6),P('debout',8),
+         P('debout',10),P('debout',11),P('debout',13),P('debout',14),P('debout',15),
+         P('assis',0),P('assis',1),P('assis',3),P('assis',6),P('assis',9),P('assis',11),P('assis',13),P('assis',19),P('assis',20),
+         P('finale',0),P('finale',1),P('finale',2),P('finale',3),P('finale',7),P('finale',13),
+         {sk:'Savasana',fr:'Relaxation',t:240}]},
+];
+
+/* =====================================================
+   ÉTAT & STOCKAGE (mémoire + localStorage si dispo)
+===================================================== */
+const mem = {};
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):(k in mem?mem[k]:d);}catch(e){ return k in mem?mem[k]:d; } },
+  set(k,v){ mem[k]=v; try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+let cadence = store.get('cad',5);       // secondes par souffle
+let sound   = store.get('snd',true);
+let mySeq   = store.get('seq',[]);
+let savedSeqs = store.get('savedSeqs',[]);
+
+/* =====================================================
+   UTILITAIRES
+===================================================== */
+function poseDur(p){ return p.t ? p.t : p.b*cadence*(p.sides?2:1); }
+function fmtDur(s){ const m=Math.round(s/60); return m<1?'<1 min':`≈ ${m} min`; }
+function totalDur(list){ return list.reduce((a,p)=>a+poseDur(p),0); }
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2200);
+}
+function esc(s){ return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* =====================================================
+   ONGLETS
+===================================================== */
+function showTab(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='panel-'+id));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.p===id));
+  window.scrollTo({top:0});
+}
+
+/* =====================================================
+   RENDU — ASHTANGA
+===================================================== */
+function renderAsh(){
+  const wrap=document.getElementById('ashSections'); wrap.innerHTML='';
+  ASH.forEach(sec=>{
+    const dur=fmtDur(totalDur(sec.poses));
+    const el=document.createElement('div'); el.className='card sec';
+    el.innerHTML=`
+      <button class="sec-head" onclick="this.parentNode.classList.toggle('open')">
+        <span><h3>${sec.name}</h3><span class="meta">${sec.poses.length} postures · ${dur}</span></span>
+        <span class="chev">›</span>
+      </button>
+      <div class="sec-body">
+        ${sec.poses.map((p,i)=>`
+          <div class="pose">
+            <span>${esc(p.sk)}<span class="fr">${esc(p.fr)}</span></span>
+            <span class="row" style="gap:8px">
+              <span class="b">${p.t?Math.round(p.t/60*10)/10+' min':p.b+' souffles'+(p.sides?' /côté':'')}</span>
+              <button class="addbtn" onclick="addToSeq('${sec.id}',${i})" aria-label="Ajouter au séquenceur">+</button>
+            </span>
+          </div>`).join('')}
+        <div class="row" style="margin-top:10px">
+          <button class="btn ghost small" onclick="playAshtanga('${sec.id}')">▶ Cette section</button>
+        </div>
+      </div>`;
+    wrap.appendChild(el);
+  });
+  document.getElementById('ashTotal').textContent = fmtDur(totalDur(ASH.flatMap(s=>s.poses)));
+}
+
+/* =====================================================
+   RENDU — ROUTINES
+===================================================== */
+function renderRoutines(){
+  const wrap=document.getElementById('routList'); wrap.innerHTML='';
+  ROUTINES.forEach((r,i)=>{
+    const el=document.createElement('div'); el.className='card routine';
+    el.innerHTML=`
+      <span class="badge">${r.badge}</span>
+      <h2>${r.name}</h2>
+      <p class="sub">${r.desc}</p>
+      <ul>${r.poses.slice(0,4).map(p=>`<li>${esc(p.sk)}</li>`).join('')}<li>… ${r.poses.length} étapes au total</li></ul>
+      <div class="row">
+        <button class="btn" onclick="playRoutine(${i})">▶ Démarrer</button>
+        <span class="meta">${fmtDur(totalDur(r.poses))} à ta cadence</span>
+      </div>`;
+    wrap.appendChild(el);
+  });
+}
+
+/* =====================================================
+   SÉQUENCEUR
+===================================================== */
+function addToSeq(secId,idx){
+  mySeq.push({...P(secId,idx)});
+  persistSeq(); renderSeq();
+  toast('Ajoutée à ta séquence ✓');
+}
+function persistSeq(){ store.set('seq',mySeq); }
+function renderSeq(){
+  const wrap=document.getElementById('seqList');
+  if(!mySeq.length){ wrap.innerHTML='<p class="empty">Séquence vide — pioche ci-dessous 👇</p>'; }
+  else{
+    wrap.innerHTML=mySeq.map((p,i)=>`
+      <div class="seq-item">
+        <div class="nm">${esc(p.sk)}<small>${esc(p.fr)}${p.sides?' · 2 côtés':''}</small></div>
+        ${p.t?`<span class="meta mono">${Math.round(p.t/60)}min</span>`:`
+        <div class="stepper">
+          <button onclick="chgBreath(${i},-1)">−</button><span class="mono">${p.b}</span><button onclick="chgBreath(${i},1)">+</button>
+        </div>`}
+        <div class="ctrl">
+          <button onclick="moveSeq(${i},-1)" aria-label="Monter">↑</button>
+          <button onclick="moveSeq(${i},1)" aria-label="Descendre">↓</button>
+          <button onclick="delSeq(${i})" aria-label="Retirer">✕</button>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('seqTotal').textContent = mySeq.length? `${mySeq.length} postures · ${fmtDur(totalDur(mySeq))}` : '';
+}
+function chgBreath(i,d){ mySeq[i].b=Math.max(1,Math.min(50,mySeq[i].b+d)); persistSeq(); renderSeq(); }
+function moveSeq(i,d){ const j=i+d; if(j<0||j>=mySeq.length)return; [mySeq[i],mySeq[j]]=[mySeq[j],mySeq[i]]; persistSeq(); renderSeq(); }
+function delSeq(i){ mySeq.splice(i,1); persistSeq(); renderSeq(); }
+function clearSeq(){ mySeq=[]; persistSeq(); renderSeq(); }
+function saveSeqPrompt(){
+  if(!mySeq.length){ toast('Ta séquence est vide'); return; }
+  const name=prompt('Nom de la séquence :','Ma séquence');
+  if(!name) return;
+  savedSeqs.push({name, poses:JSON.parse(JSON.stringify(mySeq))});
+  store.set('savedSeqs',savedSeqs); renderSaved();
+  toast('Séquence enregistrée ✓');
+}
+function renderSaved(){
+  const card=document.getElementById('savedCard'), wrap=document.getElementById('savedList');
+  card.style.display = savedSeqs.length?'block':'none';
+  wrap.innerHTML=savedSeqs.map((s,i)=>`
+    <div class="saved">
+      <span>${esc(s.name)} <span class="meta">· ${s.poses.length} postures</span></span>
+      <span class="row" style="gap:6px">
+        <button class="btn small" onclick="loadSaved(${i},true)">▶</button>
+        <button class="btn ghost small" onclick="loadSaved(${i},false)">Charger</button>
+        <button class="btn ghost small" onclick="delSaved(${i})">✕</button>
+      </span>
+    </div>`).join('');
+}
+function loadSaved(i,play){
+  mySeq=JSON.parse(JSON.stringify(savedSeqs[i].poses));
+  persistSeq(); renderSeq();
+  if(play) playCustom(); else toast('Séquence chargée ✓');
+}
+function delSaved(i){ savedSeqs.splice(i,1); store.set('savedSeqs',savedSeqs); renderSaved(); }
+
+/* Bibliothèque */
+function renderLibFilter(){
+  const sel=document.getElementById('libFilter');
+  sel.innerHTML='<option value="all">Toutes les familles</option>'+ASH.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+function renderLib(){
+  const f=document.getElementById('libFilter').value;
+  const wrap=document.getElementById('libList');
+  const secs=ASH.filter(s=>f==='all'||s.id===f);
+  wrap.innerHTML=secs.map(sec=>sec.poses.map((p,i)=>`
+    <div class="pose">
+      <span>${esc(p.sk)}<span class="fr">${esc(p.fr)}</span></span>
+      <button class="addbtn" onclick="addToSeq('${sec.id}',${i})" aria-label="Ajouter">+</button>
+    </div>`).join('')).join('');
+}
+
+/* =====================================================
+   AUDIO — gong doux (Web Audio)
+===================================================== */
+let actx=null;
+function gong(freq=220,dur=1.4,vol=.25){
+  if(!sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type='sine'; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+
+/* =====================================================
+   WAKE LOCK — écran allumé pendant la séance
+===================================================== */
+let wakeLock=null;
+async function lockScreen(){
+  try{ wakeLock=await navigator.wakeLock.request('screen');
+       document.getElementById('wakeInfo').textContent='actif ✓'; }catch(e){}
+}
+function unlockScreen(){ try{ wakeLock&&wakeLock.release(); wakeLock=null; }catch(e){} }
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && session.on) lockScreen();
+});
+
+/* =====================================================
+   LECTEUR
+===================================================== */
+const session={on:false,list:[],idx:0,phase:0,paused:false,timer:null,left:0,start:0};
+
+function buildSteps(poses){
+  // Décompose les postures bilatérales en 2 étapes (droite / gauche)
+  const steps=[];
+  poses.forEach(p=>{
+    if(p.sides){
+      steps.push({...p,side:'côté droit'});
+      steps.push({...p,side:'côté gauche'});
+    } else steps.push({...p});
+  });
+  return steps;
+}
+function playAshtanga(what){
+  const poses = what==='all' ? ASH.flatMap(s=>s.poses) : ASH.find(s=>s.id===what).poses;
+  const title = what==='all' ? 'Ashtanga · série 1' : 'Ashtanga · '+ASH.find(s=>s.id===what).name;
+  startSession(poses,title);
+}
+function playRoutine(i){ startSession(ROUTINES[i].poses,'Routine · '+ROUTINES[i].name); }
+function playCustom(){
+  if(!mySeq.length){ toast('Ta séquence est vide'); return; }
+  startSession(mySeq,'Ma séquence');
+}
+
+function startSession(poses,title){
+  session.list=buildSteps(poses);
+  session.idx=0; session.on=true; session.paused=false; session.start=Date.now();
+  document.getElementById('pTitle').textContent=title;
+  document.getElementById('player').classList.add('on');
+  document.getElementById('pMain').style.display='flex';
+  document.getElementById('pCtrl').style.display='flex';
+  document.getElementById('doneMsg').style.display='none';
+  document.body.style.overflow='hidden';
+  document.documentElement.style.setProperty('--cad',cadence+'s');
+  lockScreen(); gong(330,.8,.15);
+  loadStep();
+}
+function loadStep(){
+  const s=session.list[session.idx];
+  if(!s){ finishSession(); return; }
+  document.getElementById('pPose').textContent=s.sk;
+  document.getElementById('pFr').textContent=s.fr;
+  document.getElementById('pSide').textContent=s.side||'';
+  const nx=session.list[session.idx+1];
+  document.getElementById('pNext').innerHTML = nx? `Suivant : <b>${esc(nx.sk)}${nx.side?' — '+nx.side:''}</b>` : 'Dernière posture 🌊';
+  document.getElementById('pProg').style.width = (session.idx/session.list.length*100)+'%';
+  const orb=document.getElementById('orb'); orb.classList.remove('anim'); void orb.offsetWidth;
+  if(s.t){ session.left=s.t; session.mode='time'; }
+  else{ session.left=s.b; session.mode='breath'; orb.classList.add('anim'); }
+  updateCount();
+  tickStart();
+}
+function tickStart(){
+  clearInterval(session.timer);
+  const iv = session.mode==='breath' ? cadence*1000 : 1000;
+  session.timer=setInterval(()=>{
+    if(session.paused) return;
+    session.left--;
+    if(session.left<=0){ gong(); session.idx++; loadStep(); }
+    else updateCount();
+  },iv);
+}
+function updateCount(){
+  const c=document.getElementById('pCount');
+  c.textContent = session.mode==='breath' ? session.left : fmtClock(session.left);
+}
+function fmtClock(s){ const m=Math.floor(s/60),ss=s%60; return m+':'+String(ss).padStart(2,'0'); }
+function togglePause(){
+  session.paused=!session.paused;
+  document.getElementById('pPause').textContent=session.paused?'▶':'⏸';
+  document.getElementById('orb').style.animationPlayState=session.paused?'paused':'running';
+}
+function nextPose(){ gong(260,.6,.12); session.idx++; loadStep(); }
+function prevPose(){ if(session.idx>0){ session.idx--; loadStep(); } }
+function finishSession(){
+  clearInterval(session.timer);
+  document.getElementById('pProg').style.width='100%';
+  document.getElementById('pMain').style.display='none';
+  document.getElementById('pCtrl').style.display='none';
+  document.getElementById('doneMsg').style.display='flex';
+  const mins=Math.round((Date.now()-session.start)/60000);
+  document.getElementById('doneStats').textContent=`${session.list.length} étapes · ${mins} min sur le tapis`;
+  gong(196,2.2,.3); setTimeout(()=>gong(262,2.2,.2),700);
+  unlockScreen();
+}
+function stopSession(){
+  clearInterval(session.timer);
+  session.on=false;
+  document.getElementById('player').classList.remove('on');
+  document.body.style.overflow='';
+  unlockScreen();
+}
+
+/* =====================================================
+   RÉGLAGES
+===================================================== */
+function chgCad(d){
+  cadence=Math.max(3,Math.min(10,cadence+d));
+  store.set('cad',cadence);
+  document.getElementById('cadVal').textContent=cadence+' s';
+  document.documentElement.style.setProperty('--cad',cadence+'s');
+  renderAsh(); renderRoutines(); renderSeq();
+}
+function toggleSnd(){
+  sound=!sound; store.set('snd',sound);
+  document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
+  if(sound) gong(330,.6,.15);
+}
+
+/* =====================================================
+   INIT
+===================================================== */
+document.getElementById('cadVal').textContent=cadence+' s';
+document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
+renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib();
+
+/* PWA — service worker (HTTPS requis) */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

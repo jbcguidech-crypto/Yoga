@@ -1,0 +1,17 @@
+{
+  "name": "Tapis — Routines de yoga",
+  "short_name": "Tapis",
+  "description": "Ashtanga série 1, routines courtes et séquences sur mesure, guidées souffle par souffle.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#08252e",
+  "theme_color": "#08252e",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
