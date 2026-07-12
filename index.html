@@ -139,6 +139,15 @@ select{
 }
 .saved{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px;border-bottom:1px dashed rgba(111,214,201,.1)}
 
+/* ---------- Générateur ---------- */
+.chip{
+  border:1px solid var(--line);border-radius:999px;padding:8px 14px;
+  font-size:.82rem;color:var(--dim);font-weight:600;transition:.15s ease;
+}
+.chip.on{background:var(--aqua);color:var(--deep);border-color:var(--aqua)}
+.gen-pose{display:flex;justify-content:space-between;gap:8px;padding:6px 2px;font-size:.85rem;border-bottom:1px dashed rgba(111,214,201,.08)}
+.gen-pose .b{color:var(--air);font-size:.76rem;white-space:nowrap}
+
 /* ---------- Lecteur ---------- */
 #player{
   position:fixed;inset:0;z-index:100;background:var(--deep);
@@ -203,7 +212,7 @@ select{
 
 <header class="hero">
   <h1>Tapis <span>·</span> yoga</h1>
-  <p>Ashtanga série 1, routines courtes et séquences sur mesure. Le souffle donne le rythme.</p>
+  <p>Séances équilibrées avant / arrière, centrées sur le souffle : extensions, torsions, inversions. La série 1 quand tu veux la tradition.</p>
   <div class="waves" aria-hidden="true">
     <svg viewBox="0 0 1200 46" preserveAspectRatio="none">
       <path d="M0 24 Q75 4 150 24 T300 24 T450 24 T600 24 T750 24 T900 24 T1050 24 T1200 24 V46 H0 Z" fill="#0c313d"/>
@@ -222,12 +231,30 @@ select{
       <button class="btn" onclick="playAshtanga('all')">▶ Séance complète</button>
       <span class="meta" id="ashTotal"></span>
     </div>
+    <p class="meta" id="ashComp" style="margin-top:8px"></p>
   </div>
   <div id="ashSections"></div>
 </section>
 
 <!-- ============ ROUTINES ============ -->
 <section id="panel-rout" class="panel">
+  <div class="card">
+    <h2>Séance sur mesure</h2>
+    <p class="sub">Ton temps, ton objectif — je compose une séance équilibrée avant/arrière avec échauffement, contre-postures et clôture.</p>
+    <p class="meta" style="margin:12px 0 6px">Temps disponible</p>
+    <div class="row" id="genDur"></div>
+    <p class="meta" style="margin:12px 0 6px">Objectif</p>
+    <div class="row" id="genObj"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn gold" onclick="genSession()">✨ Générer</button>
+    </div>
+    <div id="genOut" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>Séances équilibrées</h2>
+    <p class="sub">Chaque flexion avant est compensée par une extension. Torsions, cobras, ponts, chandelles et inversions sont là pour la mobilité de la cage thoracique et la capacité respiratoire — le pranayama dédié se fait à part, dans ton appli de respiration.</p>
+    <p class="meta" style="margin-top:8px">⬇ flexion avant · ⬆ extension · ↺ torsion · 🙃 inversion</p>
+  </div>
   <div id="routList"></div>
 </section>
 
@@ -235,7 +262,7 @@ select{
 <section id="panel-seq" class="panel">
   <div class="card">
     <h2>Ma séquence</h2>
-    <p class="sub">Ajoute des postures depuis la bibliothèque, ajuste les souffles, réordonne.</p>
+    <p class="sub">Ajoute des postures depuis la bibliothèque, ajuste les souffles, réordonne.<br>⬇ avant · ⬆ arrière · ↺ torsion · 🙃 inversion</p>
     <div id="seqList" style="margin-top:12px"><p class="empty">Séquence vide — pioche ci-dessous 👇</p></div>
     <div class="row" style="margin-top:10px">
       <button class="btn" id="seqPlayBtn" onclick="playCustom()">▶ Lancer</button>
@@ -413,25 +440,236 @@ const ASH = [
  ]},
 ];
 
-/* Routines courtes prédéfinies (références par index de section/posture) */
-function P(sec,idx){ const p=ASH.find(s=>s.id===sec).poses[idx]; return {...p}; }
+/* Bibliothèque étendue — au-delà de la série 1 pour équilibrer avant/arrière et centrer sur le souffle */
+const EXTRA = [
+ {id:'ext', name:'Extensions & ouvertures', poses:[
+   {sk:'Chakravakasana (chat-vache)',fr:'Mobilisation du dos, synchro souffle',b:10},
+   {sk:'Anahatasana',fr:'Chiot étiré — ouverture du thorax',b:8},
+   {sk:'Salamba Bhujangasana',fr:'Sphinx',b:10},
+   {sk:'Bhujangasana',fr:'Cobra',b:8},
+   {sk:'Urdhva Mukha Svanasana',fr:'Chien tête en haut',b:5},
+   {sk:'Salabhasana',fr:'Sauterelle',b:5},
+   {sk:'Dhanurasana',fr:'Arc',b:5},
+   {sk:'Ustrasana',fr:'Chameau',b:5},
+   {sk:'Setu Bandha Sarvangasana',fr:'Pont classique',b:8},
+   {sk:'Matsyasana',fr:'Poisson — ouverture des côtes',b:8},
+ ]},
+ {id:'tor', name:'Torsions', poses:[
+   {sk:'Ardha Matsyendrasana',fr:'Demi-torsion assise',b:5,sides:1},
+   {sk:'Bharadvajasana',fr:'Torsion du sage',b:5,sides:1},
+   {sk:'Parivrtta Utkatasana',fr:'Chaise en torsion',b:5,sides:1},
+   {sk:'Jathara Parivartanasana',fr:'Torsion allongée',b:8,sides:1},
+ ]},
+ {id:'hanches', name:'Hanches & membres inférieurs', poses:[
+   {sk:'Anjaneyasana',fr:'Croissant — fente basse',b:5,sides:1},
+   {sk:'Utthan Pristhasana',fr:'Lézard',b:8,sides:1},
+   {sk:'Ardha Hanumanasana',fr:'Demi grand écart',b:5,sides:1},
+   {sk:'Eka Pada Rajakapotasana',fr:'Pigeon',b:8,sides:1},
+   {sk:'Malasana',fr:'Guirlande — squat profond',b:8},
+   {sk:'Gomukhasana',fr:'Tête de vache — jambes',b:8,sides:1},
+   {sk:'Apanasana',fr:'Genoux à la poitrine',b:8},
+   {sk:'Supta Baddha Konasana',fr:'Papillon allongé',t:120},
+ ]},
+ {id:'inv', name:'Inversions', poses:[
+   {sk:'Adho Mukha Svanasana',fr:'Chien tête en bas',b:8},
+   {sk:'Viparita Karani',fr:'Jambes au mur',t:180},
+   {sk:'Salamba Sarvangasana',fr:'Chandelle',b:15},
+   {sk:'Halasana',fr:'Charrue',b:8},
+   {sk:'Sirsasana',fr:'Posture sur la tête',b:15},
+ ]},
+];
+const LIB = [...ASH, ...EXTRA];
+
+/* Catégorisation : ⬇ flexion avant · ⬆ extension · ↺ torsion · 🙃 inversion */
+function catOf(n){
+  if(/Setu Bandha Sarvangasana/.test(n)) return 'ar';
+  if(/Sarvangasana|Halasana|Karnapidasana|Sirsasana|Viparita|Urdhva Padmasana|Pindasana|Adho Mukha Svanasana/.test(n)) return 'inv';
+  if(/Parivrtta|Matsyendrasana|Bharadvaja|Jathara|Marichyasana C|Marichyasana D/.test(n)) return 'to';
+  if(/Dhanurasana|Bhujangasana|Sphinx|Ustrasana|Salabhasana|Purvattanasana|Matsyasana|Setu|Anahatasana|Uttana Padasana|Urdhva Mukha Svanasana|Chakravakasana|Anjaneyasana/.test(n)) return 'ar';
+  if(/Paschimottanasana|Padangusthasana|Pada Hastasana|Parsvottanasana|Janu|Kurmasana|Baddha Konasana|Upavistha|Prasarita|Padottanasana|Triang|Balasana|Padmottanasana|Supta Konasana|Rajakapotasana|Hanumanasana|Pristhasana|Malasana|Gomukhasana|Apanasana/.test(n)) return 'av';
+  return '';
+}
+const ICO={av:'⬇',ar:'⬆',to:'↺',inv:'🙃'};
+function ico(n){ const c=catOf(n); return c?ICO[c]+' ':''; }
+function comp(poses){
+  const c={av:0,ar:0,to:0,inv:0};
+  poses.forEach(p=>{ const k=catOf(p.sk); if(k in c) c[k]++; });
+  return `⬇${c.av} · ⬆${c.ar} · ↺${c.to} · 🙃${c.inv}`;
+}
+
+/* Routines prédéfinies (références par index de section/posture)
+   Principe : chaque flexion avant est compensée par une extension (et inversement),
+   torsions + inversions systématiques pour la mobilité de la cage et le souffle.
+   Aucun pranayama ici — le travail respiratoire dédié se fait à part (OA). */
+function P(sec,idx){ const p=LIB.find(s=>s.id===sec).poses[idx]; return {...p}; }
 const ROUTINES = [
- {name:'Réveil', badge:'15 MIN', desc:'Mise en route douce : salutations, ouvertures debout, une torsion, repos.',
-  poses:[P('surya',0),P('surya',1),P('surya',5),P('debout',2),P('debout',4),P('debout',6),
-         P('assis',1),P('assis',11),{sk:'Savasana',fr:'Relaxation',t:120}]},
- {name:'Équilibre', badge:'30 MIN', desc:'Salutations complètes, socle debout, premières assises, finale courte.',
-  poses:[P('surya',0),P('surya',1),P('surya',2),P('surya',5),P('surya',6),
-         P('debout',0),P('debout',2),P('debout',3),P('debout',4),P('debout',6),P('debout',8),P('debout',10),P('debout',13),
-         P('assis',0),P('assis',1),P('assis',6),P('assis',11),P('assis',19),
-         P('finale',1),{sk:'Savasana',fr:'Relaxation',t:180}]},
- {name:'Série condensée', badge:'45 MIN', desc:'L\u2019essentiel de la série 1 quand le temps manque : debout complet, assises clés, finale.',
-  poses:[P('surya',0),P('surya',1),P('surya',2),P('surya',5),P('surya',6),P('surya',7),
-         P('debout',0),P('debout',1),P('debout',2),P('debout',3),P('debout',4),P('debout',5),P('debout',6),P('debout',8),
-         P('debout',10),P('debout',11),P('debout',13),P('debout',14),P('debout',15),
-         P('assis',0),P('assis',1),P('assis',3),P('assis',6),P('assis',9),P('assis',11),P('assis',13),P('assis',19),P('assis',20),
-         P('finale',0),P('finale',1),P('finale',2),P('finale',3),P('finale',7),P('finale',13),
+ {name:'Souffle du matin', badge:'RÉVEIL · ≈15 MIN',
+  desc:'Réveil du dos et du diaphragme : mobilisation synchro souffle, sphinx, torsion allongée, pont, jambes au mur.',
+  poses:[P('ext',0),P('inv',0),P('surya',0),P('surya',1),
+         P('ext',2),P('finale',10),
+         P('tor',3),P('ext',8),P('assis',1),
+         P('inv',1),
+         {sk:'Savasana',fr:'Relaxation',t:120}]},
+ {name:'Avant · Arrière', badge:'MIROIR · ≈20 MIN',
+  desc:'Alternance stricte flexion avant / extension pour compenser la dominante « avant » de la série 1 — torsions charnières, chandelle et poisson en clôture.',
+  poses:[P('surya',0),P('surya',1),P('surya',5),
+         P('debout',0),P('ext',4),
+         P('debout',2),P('debout',3),
+         P('debout',6),P('ext',7),
+         P('debout',10),P('ext',5),
+         P('assis',1),P('assis',3),
+         P('assis',6),P('ext',8),
+         P('assis',11),P('ext',6),
+         P('assis',20),P('finale',0),P('finale',1),
+         P('inv',2),P('ext',9),
+         {sk:'Savasana',fr:'Relaxation',t:180}]},
+ {name:'Grande respiration', badge:'CAPACITÉ · ≈30 MIN',
+  desc:'La cage thoracique au centre : ouvertures progressives jusqu\u2019à la roue, torsions profondes, inversions longues — chandelle, charrue, sirsasana.',
+  poses:[P('ext',0),P('surya',0),P('surya',1),P('surya',2),P('surya',5),P('surya',6),
+         P('debout',14),P('debout',5),
+         P('ext',1),P('ext',2),P('ext',3),P('ext',5),P('finale',10),
+         P('ext',6),P('tor',0),P('ext',7),P('assis',1),
+         P('ext',8),P('finale',0),P('finale',1),
+         P('tor',1),
+         P('inv',2),P('inv',3),P('ext',9),
+         P('inv',4),P('finale',10),
+         P('inv',1),
          {sk:'Savasana',fr:'Relaxation',t:240}]},
 ];
+
+/* =====================================================
+   GÉNÉRATEUR DE SÉANCE
+   Phases : échauffement (~25%) → corps (pool mélangé) →
+   équilibrage av/ar automatique → clôture → savasana.
+===================================================== */
+function N(name){
+  for(const s of LIB){ const p=s.poses.find(p=>p.sk===name); if(p) return {...p}; }
+  return null;
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+const GEN={
+ mob:{label:'Mobilité & respiration',
+   warm:['Chakravakasana (chat-vache)','Surya Namaskara A — tour 1','Surya Namaskara A — tour 2','Adho Mukha Svanasana'],
+   pool:['Anahatasana','Salamba Bhujangasana','Bhujangasana','Salabhasana','Dhanurasana','Ustrasana','Setu Bandha Sarvangasana','Ardha Matsyendrasana','Bharadvajasana','Jathara Parivartanasana','Parivrtta Utkatasana','Virabhadrasana A','Urdhva Dhanurasana ×3'],
+   close:['Salamba Sarvangasana','Halasana','Matsyasana','Paschimottanasana','Viparita Karani'],
+   sava:.10},
+ jambes:{label:'Souplesse jambes & hanches',
+   warm:['Chakravakasana (chat-vache)','Surya Namaskara A — tour 1','Adho Mukha Svanasana'],
+   pool:['Anjaneyasana','Utthan Pristhasana','Ardha Hanumanasana','Eka Pada Rajakapotasana','Malasana','Gomukhasana','Prasarita Padottanasana A','Parsvottanasana','Janu Sirsasana A','Upavistha Konasana','Baddha Konasana','Supta Padangusthasana'],
+   close:['Setu Bandha Sarvangasana','Jathara Parivartanasana','Viparita Karani'],
+   sava:.10},
+ dyn:{label:'Dynamique',
+   warm:['Surya Namaskara A — tour 1','Surya Namaskara A — tour 2','Surya Namaskara B — tour 1','Surya Namaskara B — tour 2'],
+   pool:['Utkatasana','Virabhadrasana A','Virabhadrasana B','Utthita Trikonasana','Utthita Parsvakonasana','Parivrtta Utkatasana','Utthita Hasta Padangusthasana','Navasana ×5','Bhujapidasana','Urdhva Mukha Svanasana','Salabhasana','Urdhva Dhanurasana ×3'],
+   close:['Ardha Matsyendrasana','Paschimottanasana','Salamba Sarvangasana','Matsyasana'],
+   sava:.08},
+ relax:{label:'Relaxation',
+   warm:['Chakravakasana (chat-vache)','Balasana','Adho Mukha Svanasana'],
+   pool:['Anahatasana','Supta Padangusthasana','Baddha Konasana','Upavistha Konasana','Supta Konasana','Jathara Parivartanasana','Salamba Bhujangasana','Setu Bandha Sarvangasana','Gomukhasana','Eka Pada Rajakapotasana'],
+   close:['Matsyasana','Viparita Karani'],
+   sava:.18},
+ recup:{label:'Récup sport',
+   warm:['Chakravakasana (chat-vache)','Adho Mukha Svanasana'],
+   pool:['Anjaneyasana','Eka Pada Rajakapotasana','Ardha Hanumanasana','Malasana','Supta Padangusthasana','Gomukhasana','Jathara Parivartanasana','Paschimottanasana A','Baddha Konasana','Setu Bandha Sarvangasana'],
+   close:['Viparita Karani'],
+   sava:.15},
+ dos:{label:'Dos & posture',
+   warm:['Chakravakasana (chat-vache)','Adho Mukha Svanasana','Surya Namaskara A — tour 1'],
+   pool:['Salamba Bhujangasana','Balasana','Salabhasana','Bhujangasana','Apanasana','Ardha Matsyendrasana','Dhanurasana','Setu Bandha Sarvangasana','Jathara Parivartanasana','Ustrasana','Bharadvajasana','Anahatasana'],
+   close:['Supta Baddha Konasana','Viparita Karani'],
+   sava:.12},
+};
+
+function generate(objKey,mins){
+  const o=GEN[objKey], target=mins*60;
+  const seq=[]; let t=0;
+  const add=p=>{ if(p){ seq.push(p); t+=poseDur(p); } };
+  const sava=Math.max(o.sava>=.15?180:120, Math.round(target*o.sava/30)*30);
+
+  // Échauffement (~25 % du temps)
+  for(const n of o.warm){ if(t<target*.25) add(N(n)); }
+
+  // Clôture réservée (au moins l'essentiel si le temps est court)
+  let closeList=o.close.map(N).filter(Boolean);
+  if(mins<=15) closeList=closeList.slice(-2);
+  const closeT=closeList.reduce((a,p)=>a+poseDur(p),0);
+
+  // Corps de séance : pool mélangé, contre-posture injectée après 3 postures du même sens
+  const COUNTER={ar:['Balasana','Paschimottanasana A','Apanasana'], av:['Setu Bandha Sarvangasana','Salamba Bhujangasana','Salabhasana']};
+  let run=0, runCat='', ci={av:0,ar:0};
+  const pushSmart=p=>{
+    if(!p) return;
+    add(p);
+    const k=catOf(p.sk);
+    if(k==='av'||k==='ar'){ if(k===runCat){run++;} else {runCat=k; run=1;} }
+    // torsions, inversions et postures neutres : la série continue (elles neutralisent sans compenser)
+    if(run>=3 && runCat){
+      const list=COUNTER[runCat];
+      const c=N(list[ci[runCat]++ % list.length]);
+      if(c && t+poseDur(c)+closeT+sava<target) add(c);
+      run=0; runCat='';
+    }
+  };
+  const pool=shuffle(o.pool.slice());
+  for(const n of pool){ if(t+closeT+sava>=target) break; pushSmart(N(n)); }
+
+  // Si la bibliothèque ne suffit pas : allonger les tenues (max ×1.8)
+  const deficit=(target-closeT-sava)/Math.max(t,1);
+  if(deficit>1.1){
+    const f=Math.min(deficit,1.8);
+    seq.forEach(p=>{ if(p.b) p.b=Math.round(p.b*f); });
+    t=seq.reduce((a,p)=>a+poseDur(p),0);
+    // deuxième passage si encore court
+    for(const n of shuffle(o.pool.slice())){
+      if(t+closeT+sava>=target) break;
+      const p=N(n); if(!p) continue;
+      if(!seq.some(q=>q.sk===p.sk)){ pushSmart(p); }
+      else { p.sk+=' — bis'; pushSmart(p); }
+    }
+  }
+
+  // Équilibrage av/ar automatique
+  const c={av:0,ar:0,to:0,inv:0};
+  seq.forEach(p=>{ const k=catOf(p.sk); if(k in c)c[k]++; });
+  if(c.av-c.ar>=3) add(N('Setu Bandha Sarvangasana'));
+  else if(c.ar-c.av>=3) add(N('Paschimottanasana A')||N('Balasana'));
+
+  closeList.forEach(add);
+  seq.push({sk:'Savasana',fr:'Relaxation',t:sava});
+  return seq;
+}
+
+/* --- UI générateur --- */
+const GEN_DURS=[10,15,20,30,45,60];
+let genDurVal=20, genObjVal='mob', lastGen=null;
+function renderGenChips(){
+  document.getElementById('genDur').innerHTML=GEN_DURS.map(d=>
+    `<button class="chip${d===genDurVal?' on':''}" onclick="setGenDur(${d})">${d} min</button>`).join('');
+  document.getElementById('genObj').innerHTML=Object.entries(GEN).map(([k,o])=>
+    `<button class="chip${k===genObjVal?' on':''}" onclick="setGenObj('${k}')">${o.label}</button>`).join('');
+}
+function setGenDur(d){ genDurVal=d; renderGenChips(); }
+function setGenObj(k){ genObjVal=k; renderGenChips(); }
+function genSession(){
+  lastGen=generate(genObjVal,genDurVal);
+  const out=document.getElementById('genOut');
+  out.innerHTML=`
+    <p class="meta mono" style="margin-bottom:6px">${comp(lastGen)} · ${fmtDur(totalDur(lastGen))} à ta cadence</p>
+    ${lastGen.map(p=>`<div class="gen-pose"><span>${ico(p.sk)}${esc(p.sk)}${p.sides?' <span class="meta">· 2 côtés</span>':''}</span><span class="b">${p.t?Math.round(p.t/60)+' min':p.b+' souffles'}</span></div>`).join('')}
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="playGenerated()">▶ Lancer</button>
+      <button class="btn ghost small" onclick="genSession()">↻ Régénérer</button>
+      <button class="btn ghost small" onclick="genToSeq()">→ Séquenceur</button>
+    </div>`;
+}
+function playGenerated(){ if(lastGen) startSession(lastGen,'Sur mesure · '+GEN[genObjVal].label); }
+function genToSeq(){
+  if(!lastGen) return;
+  mySeq=JSON.parse(JSON.stringify(lastGen));
+  persistSeq(); renderSeq(); showTab('seq');
+  toast('Séance envoyée au séquenceur ✓');
+}
 
 /* =====================================================
    ÉTAT & STOCKAGE (mémoire + localStorage si dispo)
@@ -483,7 +721,7 @@ function renderAsh(){
       <div class="sec-body">
         ${sec.poses.map((p,i)=>`
           <div class="pose">
-            <span>${esc(p.sk)}<span class="fr">${esc(p.fr)}</span></span>
+            <span>${ico(p.sk)}${esc(p.sk)}<span class="fr">${esc(p.fr)}</span></span>
             <span class="row" style="gap:8px">
               <span class="b">${p.t?Math.round(p.t/60*10)/10+' min':p.b+' souffles'+(p.sides?' /côté':'')}</span>
               <button class="addbtn" onclick="addToSeq('${sec.id}',${i})" aria-label="Ajouter au séquenceur">+</button>
@@ -495,7 +733,9 @@ function renderAsh(){
       </div>`;
     wrap.appendChild(el);
   });
-  document.getElementById('ashTotal').textContent = fmtDur(totalDur(ASH.flatMap(s=>s.poses)));
+  const all=ASH.flatMap(s=>s.poses);
+  document.getElementById('ashTotal').textContent = fmtDur(totalDur(all));
+  document.getElementById('ashComp').textContent = comp(all)+' — dominante flexions avant : pense aux routines équilibrées en alternance.';
 }
 
 /* =====================================================
@@ -509,6 +749,7 @@ function renderRoutines(){
       <span class="badge">${r.badge}</span>
       <h2>${r.name}</h2>
       <p class="sub">${r.desc}</p>
+      <p class="meta mono" style="margin-top:6px">${comp(r.poses)}</p>
       <ul>${r.poses.slice(0,4).map(p=>`<li>${esc(p.sk)}</li>`).join('')}<li>… ${r.poses.length} étapes au total</li></ul>
       <div class="row">
         <button class="btn" onclick="playRoutine(${i})">▶ Démarrer</button>
@@ -533,7 +774,7 @@ function renderSeq(){
   else{
     wrap.innerHTML=mySeq.map((p,i)=>`
       <div class="seq-item">
-        <div class="nm">${esc(p.sk)}<small>${esc(p.fr)}${p.sides?' · 2 côtés':''}</small></div>
+        <div class="nm">${ico(p.sk)}${esc(p.sk)}<small>${esc(p.fr)}${p.sides?' · 2 côtés':''}</small></div>
         ${p.t?`<span class="meta mono">${Math.round(p.t/60)}min</span>`:`
         <div class="stepper">
           <button onclick="chgBreath(${i},-1)">−</button><span class="mono">${p.b}</span><button onclick="chgBreath(${i},1)">+</button>
@@ -545,7 +786,16 @@ function renderSeq(){
         </div>
       </div>`).join('');
   }
-  document.getElementById('seqTotal').textContent = mySeq.length? `${mySeq.length} postures · ${fmtDur(totalDur(mySeq))}` : '';
+  const tot=document.getElementById('seqTotal');
+  if(!mySeq.length){ tot.innerHTML=''; }
+  else{
+    const c={av:0,ar:0,to:0,inv:0};
+    mySeq.forEach(p=>{ const k=catOf(p.sk); if(k)c[k]++; });
+    let html=`${mySeq.length} postures · ${fmtDur(totalDur(mySeq))}<br>⬇ ${c.av} avant · ⬆ ${c.ar} arrière · ↺ ${c.to} torsions · 🙃 ${c.inv} inversions`;
+    if(c.av>=3 && c.ar===0) html+=`<br><span style="color:var(--air)">Séquence très « avant » — ajoute une extension (cobra, chameau, pont…)</span>`;
+    else if(c.ar>=3 && c.av===0) html+=`<br><span style="color:var(--air)">Beaucoup d\u2019extensions — pense à une flexion avant en contre-posture</span>`;
+    tot.innerHTML=html;
+  }
 }
 function chgBreath(i,d){ mySeq[i].b=Math.max(1,Math.min(50,mySeq[i].b+d)); persistSeq(); renderSeq(); }
 function moveSeq(i,d){ const j=i+d; if(j<0||j>=mySeq.length)return; [mySeq[i],mySeq[j]]=[mySeq[j],mySeq[i]]; persistSeq(); renderSeq(); }
@@ -582,15 +832,15 @@ function delSaved(i){ savedSeqs.splice(i,1); store.set('savedSeqs',savedSeqs); r
 /* Bibliothèque */
 function renderLibFilter(){
   const sel=document.getElementById('libFilter');
-  sel.innerHTML='<option value="all">Toutes les familles</option>'+ASH.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  sel.innerHTML='<option value="all">Toutes les familles</option>'+LIB.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
 }
 function renderLib(){
   const f=document.getElementById('libFilter').value;
   const wrap=document.getElementById('libList');
-  const secs=ASH.filter(s=>f==='all'||s.id===f);
+  const secs=LIB.filter(s=>f==='all'||s.id===f);
   wrap.innerHTML=secs.map(sec=>sec.poses.map((p,i)=>`
     <div class="pose">
-      <span>${esc(p.sk)}<span class="fr">${esc(p.fr)}</span></span>
+      <span>${ico(p.sk)}${esc(p.sk)}<span class="fr">${esc(p.fr)}</span></span>
       <button class="addbtn" onclick="addToSeq('${sec.id}',${i})" aria-label="Ajouter">+</button>
     </div>`).join('')).join('');
 }
@@ -743,7 +993,7 @@ function toggleSnd(){
 ===================================================== */
 document.getElementById('cadVal').textContent=cadence+' s';
 document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
-renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib();
+renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib(); renderGenChips();
 
 /* PWA — service worker (HTTPS requis) */
 if('serviceWorker' in navigator){
