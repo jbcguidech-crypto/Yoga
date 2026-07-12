@@ -147,6 +147,8 @@ select{
 .chip.on{background:var(--aqua);color:var(--deep);border-color:var(--aqua)}
 .gen-pose{display:flex;justify-content:space-between;gap:8px;padding:6px 2px;font-size:.85rem;border-bottom:1px dashed rgba(111,214,201,.08)}
 .gen-pose .b{color:var(--air);font-size:.76rem;white-space:nowrap}
+.balbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:10px 0 6px;background:var(--deep3)}
+.balbar i{display:block;height:100%}
 
 /* ---------- Lecteur ---------- */
 #player{
@@ -248,8 +250,10 @@ select{
     <div class="row" style="margin-top:14px">
       <button class="btn gold" onclick="genSession()">✨ Générer</button>
     </div>
+    <p class="meta" id="genHint" style="margin-top:10px"></p>
     <div id="genOut" style="margin-top:12px"></div>
   </div>
+  <div class="card" id="weekCard"></div>
   <div class="card">
     <h2>Séances équilibrées</h2>
     <p class="sub">Chaque flexion avant est compensée par une extension. Torsions, cobras, ponts, chandelles et inversions sont là pour la mobilité de la cage thoracique et la capacité respiratoire — le pranayama dédié se fait à part, dans ton appli de respiration.</p>
@@ -305,6 +309,10 @@ select{
     <div class="set-row">
       <span>Écran allumé pendant la séance</span>
       <span class="meta" id="wakeInfo">auto</span>
+    </div>
+    <div class="set-row">
+      <span>Historique de pratique</span>
+      <button class="btn ghost small" onclick="clearHist()">Effacer</button>
     </div>
     <p class="meta">Cadence = durée d'un souffle complet (inspir + expir). 5 souffles à 5 s ≈ 25 s par posture.</p>
   </div>
@@ -672,6 +680,60 @@ function genToSeq(){
 }
 
 /* =====================================================
+   HISTORIQUE & SUGGESTION INTELLIGENTE
+===================================================== */
+function weekHist(){ return hist.filter(h=>Date.now()-h.d < 7*864e5); }
+function weekComp(){
+  return weekHist().reduce((a,h)=>({av:a.av+h.c.av,ar:a.ar+h.c.ar,to:a.to+h.c.to,inv:a.inv+h.c.inv}),{av:0,ar:0,to:0,inv:0});
+}
+function suggestObj(){
+  const wk=weekHist();
+  if(!wk.length) return null;
+  const c=weekComp();
+  if(c.av-c.ar>=4) return {k:'mob',  why:'tes séances penchent ⬇ avant cette semaine'};
+  if(c.ar-c.av>=4) return {k:'jambes',why:'beaucoup d\u2019extensions ⬆ cette semaine'};
+  if(c.inv===0)    return {k:'mob',  why:'aucune inversion 🙃 cette semaine'};
+  if(c.to<=1)      return {k:'dos',  why:'peu de torsions ↺ cette semaine'};
+  return {k:'',why:'semaine équilibrée ✓ — libre à toi'};
+}
+function renderGenHint(){
+  const el=document.getElementById('genHint'); if(!el) return;
+  const s=suggestObj();
+  if(!s){ el.innerHTML=''; return; }
+  el.innerHTML = s.k
+    ? `💡 ${s.why} — objectif conseillé : <b>${GEN[s.k].label}</b>
+       <button class="btn ghost small" style="margin-left:8px" onclick="setGenObj('${s.k}')">Choisir</button>`
+    : `💡 ${s.why}`;
+}
+function renderWeek(){
+  const el=document.getElementById('weekCard'); if(!el) return;
+  const wk=weekHist();
+  if(!wk.length){
+    el.innerHTML=`<h2>Ma semaine</h2><p class="sub">Aucune séance enregistrée sur 7 jours — la première t\u2019attend 🌊</p>`;
+    return;
+  }
+  const mins=wk.reduce((a,h)=>a+h.min,0), c=weekComp();
+  const tot=Math.max(c.av+c.ar,1), wAv=Math.round(c.av/tot*100);
+  const last=wk.slice(-3).reverse().map(h=>{
+    const d=new Date(h.d).toLocaleDateString('fr-CH',{weekday:'short',day:'numeric'});
+    return `<div class="saved"><span>${esc(h.title)}<span class="meta"> · ${d}</span></span><span class="meta mono">${h.min} min</span></div>`;
+  }).join('');
+  el.innerHTML=`
+    <h2>Ma semaine</h2>
+    <p class="sub">${wk.length} séance${wk.length>1?'s':''} · ${mins} min sur le tapis</p>
+    <div class="balbar"><i style="width:${wAv}%;background:var(--aqua)"></i><i style="width:${100-wAv}%;background:var(--air)"></i></div>
+    <p class="meta mono">⬇ ${c.av} avant · ⬆ ${c.ar} arrière · ↺ ${c.to} torsions · 🙃 ${c.inv} inversions</p>
+    <div style="margin-top:8px">${last}</div>`;
+}
+function clearHist(){
+  if(!hist.length){ toast('Historique déjà vide'); return; }
+  if(confirm('Effacer tout l\u2019historique de pratique ?')){
+    hist=[]; store.set('hist',hist); renderWeek(); renderGenHint();
+    toast('Historique effacé ✓');
+  }
+}
+
+/* =====================================================
    ÉTAT & STOCKAGE (mémoire + localStorage si dispo)
 ===================================================== */
 const mem = {};
@@ -680,6 +742,7 @@ const store = {
   set(k,v){ mem[k]=v; try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 let cadence = store.get('cad',5);       // secondes par souffle
+let hist    = store.get('hist',[]);     // historique de pratique
 let sound   = store.get('snd',true);
 let mySeq   = store.get('seq',[]);
 let savedSeqs = store.get('savedSeqs',[]);
@@ -961,6 +1024,13 @@ function finishSession(){
   document.getElementById('doneMsg').style.display='flex';
   const mins=Math.round((Date.now()-session.start)/60000);
   document.getElementById('doneStats').textContent=`${session.list.length} étapes · ${mins} min sur le tapis`;
+  // Historique de pratique
+  const c={av:0,ar:0,to:0,inv:0};
+  session.list.forEach(p=>{ const k=catOf(p.sk); if(k in c)c[k]++; });
+  hist.push({d:Date.now(), title:document.getElementById('pTitle').textContent, min:mins, steps:session.list.length, c});
+  if(hist.length>100) hist=hist.slice(-100);
+  store.set('hist',hist);
+  renderWeek(); renderGenHint();
   gong(196,2.2,.3); setTimeout(()=>gong(262,2.2,.2),700);
   unlockScreen();
 }
@@ -993,7 +1063,7 @@ function toggleSnd(){
 ===================================================== */
 document.getElementById('cadVal').textContent=cadence+' s';
 document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
-renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib(); renderGenChips();
+renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib(); renderGenChips(); renderWeek(); renderGenHint();
 
 /* PWA — service worker (HTTPS requis) */
 if('serviceWorker' in navigator){
