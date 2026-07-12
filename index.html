@@ -41,6 +41,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .hero h1{font-size:2rem;font-weight:750;letter-spacing:-.02em}
 .hero h1 span{color:var(--aqua)}
 .hero p{color:var(--dim);margin-top:6px;font-size:.95rem;max-width:32ch}
+.hero .ver{position:absolute;top:16px;right:16px;color:var(--dim);font-size:.68rem;letter-spacing:.05em}
 .waves{position:absolute;left:0;right:0;bottom:-2px;height:46px;pointer-events:none}
 .waves svg{display:block;width:200%;height:100%;animation:drift 14s linear infinite}
 @keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -176,14 +177,13 @@ select{
   box-shadow:0 0 60px rgba(111,214,201,.25);
   transform:scale(.7);
 }
-.breath .orb.anim{animation:resp var(--cad,5s) ease-in-out infinite alternate}
-@keyframes resp{from{transform:scale(.62)}to{transform:scale(1)}}
-@media(prefers-reduced-motion:reduce){.breath .orb.anim{animation:none;transform:scale(.85)}}
+/* Animation du cercle : Web Animations API (deux vitesses inspir/expir) */
 .breath .count{position:relative;font-size:3.4rem;font-weight:700;font-family:'Spline Sans Mono',monospace}
 .p-pose{font-family:'Bricolage Grotesque',sans-serif;font-size:1.5rem;font-weight:750;line-height:1.15;max-width:22ch}
 .p-fr{color:var(--dim);font-size:.9rem;margin-top:6px}
 .p-side{color:var(--air);font-size:.82rem;font-weight:700;margin-top:8px;letter-spacing:.08em;text-transform:uppercase;min-height:1.2em}
-.p-next{color:var(--dim);font-size:.82rem;margin-top:18px}
+.p-cue{color:var(--aqua);font-size:.82rem;font-style:italic;margin-top:10px;max-width:30ch;opacity:.85;min-height:1.2em}
+.p-next{color:var(--dim);font-size:.82rem;margin-top:14px}
 .p-next b{color:var(--ink);font-weight:600}
 .p-ctrl{display:flex;gap:14px;align-items:center;margin-top:10px}
 .p-ctrl .big{
@@ -213,6 +213,7 @@ select{
 <body>
 
 <header class="hero">
+  <span class="ver mono">v1.5.0</span>
   <h1>Tapis <span>·</span> yoga</h1>
   <p>Séances équilibrées avant / arrière, centrées sur le souffle : extensions, torsions, inversions. La série 1 quand tu veux la tradition.</p>
   <div class="waves" aria-hidden="true">
@@ -295,16 +296,32 @@ select{
   <div class="card settings">
     <h2>Réglages</h2>
     <div class="set-row">
-      <span>Cadence du souffle</span>
+      <span>Inspiration</span>
       <div class="stepper">
-        <button onclick="chgCad(-1)">−</button>
-        <span class="mono" id="cadVal">5 s</span>
-        <button onclick="chgCad(1)">+</button>
+        <button onclick="chgBr('insp',-1)">−</button>
+        <span class="mono" id="inspVal">2 s</span>
+        <button onclick="chgBr('insp',1)">+</button>
       </div>
+    </div>
+    <div class="set-row">
+      <span>Expiration</span>
+      <div class="stepper">
+        <button onclick="chgBr('exp',-1)">−</button>
+        <span class="mono" id="expVal">3 s</span>
+        <button onclick="chgBr('exp',1)">+</button>
+      </div>
+    </div>
+    <div class="set-row">
+      <span>Souffle complet</span>
+      <span class="meta mono" id="cadTotal">5 s</span>
     </div>
     <div class="set-row">
       <span>Gong entre postures</span>
       <button class="btn ghost small" id="sndBtn" onclick="toggleSnd()">Activé</button>
+    </div>
+    <div class="set-row">
+      <span>Guidage vocal (voix française)</span>
+      <button class="btn ghost small" id="voiceBtn" onclick="toggleVoice()">Activé</button>
     </div>
     <div class="set-row">
       <span>Écran allumé pendant la séance</span>
@@ -314,7 +331,7 @@ select{
       <span>Historique de pratique</span>
       <button class="btn ghost small" onclick="clearHist()">Effacer</button>
     </div>
-    <p class="meta">Cadence = durée d'un souffle complet (inspir + expir). 5 souffles à 5 s ≈ 25 s par posture.</p>
+    <p class="meta">Le cercle gonfle à l'inspir et dégonfle à l'expir, chacun à sa vitesse. Expir plus long que l'inspir = tonus calme. 5 souffles à 5 s ≈ 25 s par posture.</p>
   </div>
 </section>
 </main>
@@ -344,6 +361,7 @@ select{
     <h2 class="p-pose" id="pPose">—</h2>
     <p class="p-fr" id="pFr"></p>
     <p class="p-side" id="pSide"></p>
+    <p class="p-cue" id="pCue"></p>
     <p class="p-next" id="pNext"></p>
   </div>
 
@@ -741,7 +759,9 @@ const store = {
   get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):(k in mem?mem[k]:d);}catch(e){ return k in mem?mem[k]:d; } },
   set(k,v){ mem[k]=v; try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
-let cadence = store.get('cad',5);       // secondes par souffle
+let inspir  = store.get('insp',2);      // secondes d'inspiration
+let expir   = store.get('exp',3);       // secondes d'expiration (allongée par défaut)
+let cadence = inspir+expir;             // durée d'un souffle complet
 let hist    = store.get('hist',[]);     // historique de pratique
 let sound   = store.get('snd',true);
 let mySeq   = store.get('seq',[]);
@@ -940,6 +960,153 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 /* =====================================================
+   GUIDAGE VOCAL — Web Speech API, voix française
+===================================================== */
+const TTS=(typeof window!=='undefined' && 'speechSynthesis' in window)? window.speechSynthesis : null;
+let voiceOn = store.get('voice', true);
+let frVoice=null;
+function pickVoice(){
+  if(!TTS) return;
+  const vs=TTS.getVoices();
+  frVoice = vs.find(v=>/fr[-_](CH|FR)/i.test(v.lang)) || vs.find(v=>v.lang && v.lang.toLowerCase().startsWith('fr')) || null;
+}
+if(TTS){ pickVoice(); TTS.onvoiceschanged=pickVoice; }
+function speak(txt){
+  if(!voiceOn || !TTS) return;
+  try{
+    TTS.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    if(frVoice) u.voice=frVoice;
+    u.lang='fr-FR'; u.rate=.95; u.pitch=1;
+    TTS.speak(u);
+  }catch(e){}
+}
+function speakPose(s){
+  if(!s) return;
+  let txt=s.sk.replace('×',' fois ').replace('—',',');
+  if(s.fr && s.fr!==s.sk) txt+='. '+s.fr;
+  if(s.side) txt+='. '+s.side;
+  if(s.t) txt+= s.t>=120? `. ${Math.round(s.t/60)} minutes.` : `. ${s.t} secondes.`;
+  else txt+=`. ${s.b} souffles.`;
+  const cue=cueOf(s.sk); if(cue) txt+=' '+cue+'.';
+  speak(txt);
+}
+function toggleVoice(){
+  voiceOn=!voiceOn; store.set('voice',voiceOn);
+  const b=document.getElementById('voiceBtn'); if(b) b.textContent=voiceOn?'Activé':'Coupé';
+  if(voiceOn) speak('Guidage vocal activé'); else if(TTS) TTS.cancel();
+}
+
+
+/* =====================================================
+   CONSIGNES D'ALIGNEMENT — une par posture
+===================================================== */
+const CUES={
+ 'Surya Namaskara A':'Un mouvement par souffle, nuque longue',
+ 'Surya Namaskara B':'Souffle égal, appuis stables',
+ 'Padangusthasana':'Ischions vers le ciel, dos long',
+ 'Pada Hastasana':'Poids vers l\u2019avant des pieds',
+ 'Utthita Trikonasana':'Ouvre la poitrine vers le ciel',
+ 'Parivrtta Trikonasana':'Torsion depuis le nombril, expire pour tourner',
+ 'Utthita Parsvakonasana':'Une ligne du talon aux doigts',
+ 'Parivrtta Parsvakonasana':'Coude contre genou, côtes qui respirent',
+ 'Prasarita Padottanasana A':'Sommet du crâne vers le sol',
+ 'Prasarita Padottanasana B':'Mains à la taille, ischions hauts',
+ 'Prasarita Padottanasana C':'Épaules loin des oreilles',
+ 'Prasarita Padottanasana D':'Coudes vers l\u2019extérieur',
+ 'Parsvottanasana':'Hanches carrées, front vers le tibia',
+ 'Utthita Hasta Padangusthasana':'Regard stable, jambe d\u2019appui forte',
+ 'Ardha Baddha Padmottanasana':'Jambe d\u2019appui verrouillée, souffle calme',
+ 'Utkatasana':'Poids dans les talons, coccyx lourd',
+ 'Virabhadrasana A':'Bassin carré, côtes basses fermées',
+ 'Virabhadrasana B':'Genou au-dessus de la cheville, bras longs',
+ 'Dandasana':'Colonne verticale, épaules basses',
+ 'Paschimottanasana A':'Allonge à l\u2019inspir, plonge à l\u2019expir',
+ 'Paschimottanasana C':'Allonge à l\u2019inspir, plonge à l\u2019expir',
+ 'Paschimottanasana':'Contre-posture, souffle qui descend',
+ 'Purvattanasana':'Ouvre la poitrine, pieds à plat',
+ 'Ardha Baddha Padma Paschimottanasana':'Talon dans le ventre, dos long',
+ 'Triang Mukha Eka Pada Paschimottanasana':'Poids égal sur les deux ischions',
+ 'Janu Sirsasana A':'Tourne le buste vers la jambe tendue',
+ 'Janu Sirsasana B':'Tourne le buste vers la jambe tendue',
+ 'Janu Sirsasana C':'Tourne le buste vers la jambe tendue',
+ 'Marichyasana A':'Lie et respire dans le dos',
+ 'Marichyasana B':'Lie et respire dans le dos',
+ 'Marichyasana C':'Expire pour approfondir la torsion',
+ 'Marichyasana D':'Expire pour approfondir la torsion',
+ 'Navasana':'Bas du dos long, poitrine ouverte',
+ 'Bhujapidasana':'Mains ancrées, regard devant',
+ 'Kurmasana':'Jambes actives, souffle doux',
+ 'Supta Kurmasana':'Relâche la nuque',
+ 'Garbha Pindasana':'Roule avec le souffle',
+ 'Kukkutasana':'Bandhas actifs',
+ 'Baddha Konasana':'Genoux lourds, dos droit',
+ 'Upavistha Konasana':'Bascule le bassin vers l\u2019avant',
+ 'Supta Konasana':'Nuque détendue',
+ 'Supta Padangusthasana':'Épaules au sol',
+ 'Ubhaya Padangusthasana':'Équilibre sur les ischions',
+ 'Urdhva Mukha Paschimottanasana':'Poitrine vers les jambes',
+ 'Setu Bandhasana':'Gorge ouverte, prudence pour la nuque',
+ 'Urdhva Dhanurasana':'Pousse le sol, ouvre les épaules',
+ 'Salamba Sarvangasana':'Poids sur les épaules, jamais sur la nuque',
+ 'Halasana':'Dos soutenu, jambes actives',
+ 'Karnapidasana':'Souffle dans le dos',
+ 'Urdhva Padmasana':'Genoux vers le ciel',
+ 'Pindasana':'Boule compacte, souffle calme',
+ 'Matsyasana':'Cœur vers le ciel, souffle dans les côtes',
+ 'Uttana Padasana':'Jambes fortes à 45 degrés',
+ 'Sirsasana':'Avant-bras ancrés, corps aligné',
+ 'Balasana':'Souffle dans le dos des côtes',
+ 'Baddha Padmasana':'Épaules en arrière',
+ 'Yoga Mudra':'Front vers le sol, expire long',
+ 'Padmasana':'Colonne libre, souffle fin',
+ 'Utplutih':'Bandhas forts, souffle régulier',
+ 'Savasana':'Relâche tout, souffle libre',
+ 'Chakravakasana (chat-vache)':'Dos rond à l\u2019expir, creux à l\u2019inspir',
+ 'Anahatasana':'Le cœur fond vers le sol',
+ 'Salamba Bhujangasana':'Coudes sous les épaules, nuque longue',
+ 'Bhujangasana':'Pubis au sol, épaules basses',
+ 'Urdhva Mukha Svanasana':'Cuisses décollées, poitrine ouverte',
+ 'Salabhasana':'Jambes fortes, regard bas',
+ 'Dhanurasana':'Pousse les pieds dans les mains',
+ 'Ustrasana':'Hanches au-dessus des genoux',
+ 'Setu Bandha Sarvangasana':'Pieds parallèles, fessiers doux',
+ 'Anjaneyasana':'Le bassin descend, le cœur monte',
+ 'Utthan Pristhasana':'Hanche lourde, souffle patient',
+ 'Ardha Hanumanasana':'Hanches carrées, dos long',
+ 'Eka Pada Rajakapotasana':'Bassin de face, relâche à l\u2019expir',
+ 'Malasana':'Talons ancrés, dos droit',
+ 'Gomukhasana':'Poids égal sur les ischions',
+ 'Apanasana':'Genoux vers la poitrine à l\u2019expir',
+ 'Supta Baddha Konasana':'Tout relâche, souffle bas',
+ 'Ardha Matsyendrasana':'Grandis à l\u2019inspir, tourne à l\u2019expir',
+ 'Bharadvajasana':'Les deux ischions restent ancrés',
+ 'Parivrtta Utkatasana':'Coude contre cuisse, genoux alignés',
+ 'Jathara Parivartanasana':'Épaules au sol, genoux lourds',
+ 'Adho Mukha Svanasana':'Ischions hauts, talons lourds',
+ 'Viparita Karani':'Jambes lourdes dans le mur',
+};
+function baseName(sk){ return sk.replace(/ — tour \d+$/,'').replace(/ ×\d+$/,'').replace(/ — bis$/,''); }
+function cueOf(sk){ return CUES[baseName(sk)]||''; }
+
+/* Animation du cercle de respiration — deux vitesses inspir/expir */
+const REDUCED=(typeof matchMedia!=='undefined') && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function orbAnim(orb){
+  if(orb._anim) orb._anim.cancel();
+  if(REDUCED || !orb.animate){ orb.style.transform='scale(.85)'; return; }
+  const tot=(inspir+expir)*1000;
+  orb._anim=orb.animate([
+    {transform:'scale(.62)', offset:0, easing:'ease-in-out'},
+    {transform:'scale(1)',   offset:inspir/(inspir+expir), easing:'ease-in-out'},
+    {transform:'scale(.62)', offset:1}
+  ],{duration:tot, iterations:Infinity});
+}
+function stopOrb(orb){
+  if(orb._anim){ orb._anim.cancel(); orb._anim=null; }
+  orb.style.transform='scale(.85)';
+}
+
+/* =====================================================
    LECTEUR
 ===================================================== */
 const session={on:false,list:[],idx:0,phase:0,paused:false,timer:null,left:0,start:0};
@@ -975,7 +1142,6 @@ function startSession(poses,title){
   document.getElementById('pCtrl').style.display='flex';
   document.getElementById('doneMsg').style.display='none';
   document.body.style.overflow='hidden';
-  document.documentElement.style.setProperty('--cad',cadence+'s');
   lockScreen(); gong(330,.8,.15);
   loadStep();
 }
@@ -985,12 +1151,14 @@ function loadStep(){
   document.getElementById('pPose').textContent=s.sk;
   document.getElementById('pFr').textContent=s.fr;
   document.getElementById('pSide').textContent=s.side||'';
+  document.getElementById('pCue').textContent=cueOf(s.sk);
   const nx=session.list[session.idx+1];
   document.getElementById('pNext').innerHTML = nx? `Suivant : <b>${esc(nx.sk)}${nx.side?' — '+nx.side:''}</b>` : 'Dernière posture 🌊';
   document.getElementById('pProg').style.width = (session.idx/session.list.length*100)+'%';
-  const orb=document.getElementById('orb'); orb.classList.remove('anim'); void orb.offsetWidth;
-  if(s.t){ session.left=s.t; session.mode='time'; }
-  else{ session.left=s.b; session.mode='breath'; orb.classList.add('anim'); }
+  const orb=document.getElementById('orb');
+  if(s.t){ session.left=s.t; session.mode='time'; stopOrb(orb); }
+  else{ session.left=s.b; session.mode='breath'; orbAnim(orb); }
+  speakPose(s);
   updateCount();
   tickStart();
 }
@@ -1007,12 +1175,16 @@ function tickStart(){
 function updateCount(){
   const c=document.getElementById('pCount');
   c.textContent = session.mode==='breath' ? session.left : fmtClock(session.left);
+  if(session.mode==='breath' && session.left===1) speak('Dernier souffle');
+  else if(session.mode==='time' && session.left===30 && session.list[session.idx] && session.list[session.idx].t>=90) speak('30 secondes');
 }
 function fmtClock(s){ const m=Math.floor(s/60),ss=s%60; return m+':'+String(ss).padStart(2,'0'); }
 function togglePause(){
   session.paused=!session.paused;
   document.getElementById('pPause').textContent=session.paused?'▶':'⏸';
-  document.getElementById('orb').style.animationPlayState=session.paused?'paused':'running';
+  const orb=document.getElementById('orb');
+  if(orb._anim){ session.paused? orb._anim.pause() : orb._anim.play(); }
+  if(session.paused && TTS) TTS.cancel();
 }
 function nextPose(){ gong(260,.6,.12); session.idx++; loadStep(); }
 function prevPose(){ if(session.idx>0){ session.idx--; loadStep(); } }
@@ -1032,11 +1204,13 @@ function finishSession(){
   store.set('hist',hist);
   renderWeek(); renderGenHint();
   gong(196,2.2,.3); setTimeout(()=>gong(262,2.2,.2),700);
+  setTimeout(()=>speak('Namasté. Belle pratique.'),900);
   unlockScreen();
 }
 function stopSession(){
   clearInterval(session.timer);
   session.on=false;
+  if(TTS) TTS.cancel();
   document.getElementById('player').classList.remove('on');
   document.body.style.overflow='';
   unlockScreen();
@@ -1045,24 +1219,32 @@ function stopSession(){
 /* =====================================================
    RÉGLAGES
 ===================================================== */
-function chgCad(d){
-  cadence=Math.max(3,Math.min(10,cadence+d));
-  store.set('cad',cadence);
-  document.getElementById('cadVal').textContent=cadence+' s';
-  document.documentElement.style.setProperty('--cad',cadence+'s');
+function chgBr(which,d){
+  if(which==='insp') inspir=Math.max(1,Math.min(6,inspir+d));
+  else expir=Math.max(1,Math.min(10,expir+d));
+  cadence=inspir+expir;
+  store.set('insp',inspir); store.set('exp',expir);
+  renderBrSettings();
   renderAsh(); renderRoutines(); renderSeq();
+}
+function renderBrSettings(){
+  document.getElementById('inspVal').textContent=inspir+' s';
+  document.getElementById('expVal').textContent=expir+' s';
+  document.getElementById('cadTotal').textContent=cadence+' s';
 }
 function toggleSnd(){
   sound=!sound; store.set('snd',sound);
   document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
+document.getElementById('voiceBtn').textContent = TTS ? (voiceOn?'Activé':'Coupé') : 'Non supporté';
   if(sound) gong(330,.6,.15);
 }
 
 /* =====================================================
    INIT
 ===================================================== */
-document.getElementById('cadVal').textContent=cadence+' s';
+renderBrSettings();
 document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
+document.getElementById('voiceBtn').textContent = TTS ? (voiceOn?'Activé':'Coupé') : 'Non supporté';
 renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib(); renderGenChips(); renderWeek(); renderGenHint();
 
 /* PWA — service worker (HTTPS requis) */
