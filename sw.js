@@ -1,46 +1,43 @@
-/* Tapis — service worker */
-const VERSION = 'tapis-v1.0.0';
-const CORE = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  './icon-maskable-512.png',
-  './apple-touch-icon.png'
-];
+/* Courses & Tarifs — service worker (réseau d'abord pour les pages) */
+const CACHE = 'courses-tarifs-v69';
+const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(VERSION).then(cache =>
-      Promise.allSettled(CORE.map(url => cache.add(url)))
-    ).then(() => self.skipWaiting())
+    caches.open(CACHE).then(c => c.addAll(CORE)).catch(() => {}).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-/* Cache-first pour le coeur, runtime cache pour le reste (polices Google incluses) */
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(hit => {
-      if (hit) return hit;
-      return fetch(e.request).then(res => {
-        if (res && (res.ok || res.type === 'opaque')) {
-          const copy = res.clone();
-          caches.open(VERSION).then(c => c.put(e.request, copy)).catch(() => {});
-        }
+  const req = e.request;
+  if (req.method !== 'GET') return;
+
+  // Pages (navigation) : version en ligne d'abord, repli sur le cache hors-ligne.
+  if (req.mode === 'navigate') {
+    e.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => { c.put('./', copy); });
         return res;
-      }).catch(() =>
-        e.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()
-      );
-    })
+      }).catch(() => caches.match(req).then(r => r || caches.match('./')))
+    );
+    return;
+  }
+
+  // Autres ressources (icônes, polices…) : cache d'abord, puis réseau.
+  e.respondWith(
+    caches.match(req).then(hit => hit || fetch(req).then(res => {
+      const copy = res.clone();
+      caches.open(CACHE).then(c => { try { c.put(req, copy); } catch (_) {} });
+      return res;
+    }).catch(() => hit))
   );
 });
