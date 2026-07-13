@@ -217,7 +217,7 @@ select{
 <body>
 
 <header class="hero">
-  <span class="ver mono">v1.8.0</span>
+  <span class="ver mono">v1.9.0</span>
   <h1>Tapis <span>·</span> yoga</h1>
   <p>Séances équilibrées avant / arrière, centrées sur le souffle : extensions, torsions, inversions. La série 1 quand tu veux la tradition.</p>
   <div class="waves" aria-hidden="true">
@@ -231,6 +231,8 @@ select{
 <!-- ============ ASHTANGA ============ -->
 <main>
 <section id="panel-ash" class="panel on">
+  <div class="chips" id="styleChips" style="margin:4px 0 12px"></div>
+  <div id="styleAsh">
   <div class="card">
     <h2>Série 1 · Yoga Chikitsa</h2>
     <p class="sub">Séquence traditionnelle complète, guidée souffle par souffle.</p>
@@ -252,6 +254,28 @@ select{
     <p class="meta" id="ash2Comp" style="margin-top:8px"></p>
   </div>
   <div id="ash2Sections"></div>
+
+  <div class="card">
+    <h2>Série 3 · Sthira Bhaga A</h2>
+    <p class="sub">Série avancée A : équilibres sur les mains, jambe derrière la tête, grands écarts, extensions profondes. L’ordre exact varie selon les lignées.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="playAshtanga3('all')">▶ Séance complète</button>
+      <span class="meta" id="ash3Total"></span>
+    </div>
+  </div>
+  <div id="ash3Sections"></div>
+
+  <div class="card">
+    <h2>Série 4 · Sthira Bhaga B</h2>
+    <p class="sub">Série avancée B : racines, inversions extrêmes, arcs et prises. Les séries 5 et 6 ne sont pratiquées que par une poignée de yogis et leurs séquences publiées divergent trop pour être retranscrites fidèlement.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="playAshtanga4('all')">▶ Séance complète</button>
+      <span class="meta" id="ash4Total"></span>
+    </div>
+  </div>
+  <div id="ash4Sections"></div>
+  </div>
+  <div id="styleOther"></div>
 </section>
 
 <!-- ============ ROUTINES ============ -->
@@ -359,7 +383,7 @@ select{
 
 <!-- Barre d'onglets -->
 <nav class="tabs">
-  <button class="tab on" data-p="ash" onclick="showTab('ash')"><span class="ic">🕉️</span>Ashtanga</button>
+  <button class="tab on" data-p="ash" onclick="showTab('ash')"><span class="ic">🕉️</span>Séries</button>
   <button class="tab" data-p="rout" onclick="showTab('rout')"><span class="ic">⏱️</span>Routines</button>
   <button class="tab" data-p="seq" onclick="showTab('seq')"><span class="ic">🧩</span>Séquenceur</button>
   <button class="tab" data-p="set" onclick="showTab('set')"><span class="ic">⚙️</span>Réglages</button>
@@ -583,17 +607,83 @@ const ASH2=[
    {sk:'Baddha Hasta Sirsasana D',fr:'Sirsasana bras liés D',b:5},
  ]},
 ];
-const LIB = [...ASH, ...EXTRA, ...ASH2];
+
+/* =====================================================
+   ASHTANGA SÉRIES 3 & 4 — Sthira Bhaga
+   L'ordre exact peut varier selon les lignées.
+===================================================== */
+const ASH3=[
+ {id:'s3a', name:'Série 3 · Équilibres sur les mains', poses:[
+   {sk:'Vasisthasana',fr:'Planche latérale',b:5,sides:1},
+   {sk:'Vishvamitrasana',fr:'Posture de Vishvamitra',b:5,sides:1},
+   {sk:'Kasyapasana',fr:'Posture de Kashyapa',b:5,sides:1},
+   {sk:'Chakorasana',fr:'La perdrix',b:5,sides:1},
+   {sk:'Urdhva Kukkutasana A',fr:'Coq levé A',b:5},
+   {sk:'Urdhva Kukkutasana B',fr:'Coq levé B',b:5},
+   {sk:'Urdhva Kukkutasana C',fr:'Coq levé C',b:5},
+   {sk:'Galavasana',fr:'Posture de Galava',b:5,sides:1},
+   {sk:'Eka Pada Bakasana A',fr:'Corbeau une jambe A',b:5,sides:1},
+   {sk:'Eka Pada Bakasana B',fr:'Corbeau une jambe B',b:5,sides:1},
+   {sk:'Koundinyasana A',fr:'Posture de Koundinya A',b:5,sides:1},
+   {sk:'Koundinyasana B',fr:'Posture de Koundinya B',b:5,sides:1},
+   {sk:'Astavakrasana A',fr:'Huit angles A',b:5,sides:1},
+   {sk:'Astavakrasana B',fr:'Huit angles B',b:5,sides:1},
+ ]},
+ {id:'s3b', name:'Série 3 · Jambe derrière la tête', poses:[
+   {sk:'Bhairavasana',fr:'Posture de Bhairava',b:5,sides:1},
+   {sk:'Skandasana',fr:'Posture de Skanda',b:5,sides:1},
+   {sk:'Durvasana',fr:'Posture de Durvasa',b:5,sides:1},
+ ]},
+ {id:'s3c', name:'Série 3 · Torsions profondes', poses:[
+   {sk:'Purna Matsyendrasana',fr:'Torsion complète',b:5,sides:1},
+   {sk:'Viranchyasana A',fr:'Posture de Viranchi A',b:5,sides:1},
+   {sk:'Viranchyasana B',fr:'Posture de Viranchi B',b:5,sides:1},
+ ]},
+ {id:'s3d', name:'Série 3 · Extensions & grands écarts', poses:[
+   {sk:'Viparita Dandasana',fr:'Bâton inversé',b:5},
+   {sk:'Eka Pada Viparita Dandasana',fr:'Bâton inversé une jambe',b:5,sides:1},
+   {sk:'Viparita Salabhasana',fr:'Sauterelle inversée',b:5},
+   {sk:'Ganda Bherundasana',fr:'Menton au sol',b:5},
+   {sk:'Hanumanasana',fr:'Grand écart',b:5,sides:1},
+   {sk:'Supta Trivikramasana',fr:'Trivikrama allongé',b:5,sides:1},
+   {sk:'Trivikramasana',fr:'Grand écart debout',b:5,sides:1},
+   {sk:'Natarajasana',fr:'Le danseur',b:5,sides:1},
+   {sk:'Raja Kapotasana',fr:'Pigeon royal complet',b:5},
+   {sk:'Eka Pada Raja Kapotasana',fr:'Pigeon royal une jambe',b:5,sides:1},
+ ]},
+];
+const ASH4=[
+ {id:'s4a', name:'Série 4 · Racines & lotus', poses:[
+   {sk:'Mulabandhasana',fr:'Sceau racine',b:5},
+   {sk:'Nahusasana',fr:'Posture de Nahusha',b:5,sides:1},
+   {sk:'Buddhasana',fr:'Posture du Bouddha',b:5,sides:1},
+   {sk:'Kapilasana',fr:'Posture de Kapila',b:5,sides:1},
+ ]},
+ {id:'s4b', name:'Série 4 · Inversions extrêmes', poses:[
+   {sk:'Vrschikasana',fr:'Le scorpion',b:5},
+   {sk:'Sayanasana',fr:'Équilibre sur les coudes',b:5},
+ ]},
+ {id:'s4c', name:'Série 4 · Arcs & prises', poses:[
+   {sk:'Akarna Dhanurasana A',fr:'L\u2019archer A',b:5,sides:1},
+   {sk:'Akarna Dhanurasana B',fr:'L\u2019archer B',b:5,sides:1},
+   {sk:'Padangustha Dhanurasana',fr:'Arc orteils saisis',b:5},
+   {sk:'Marichyasana E',fr:'Marichi E',b:5,sides:1},
+   {sk:'Marichyasana F',fr:'Marichi F',b:5,sides:1},
+   {sk:'Marichyasana G',fr:'Marichi G',b:5,sides:1},
+   {sk:'Marichyasana H',fr:'Marichi H',b:5,sides:1},
+ ]},
+];
+const LIB = [...ASH, ...EXTRA, ...ASH2, ...ASH3, ...ASH4];
 
 /* Catégorisation : ⬇ flexion avant · ⬆ extension · ↺ torsion · 🙃 inversion */
 function catOf(n){
   if(/Setu Bandha Sarvangasana/.test(n)) return 'ar';
-  if(/Rajakapotasana/.test(n)) return 'av';
+  if(/Rajakapotasana|Akarna Dhanurasana/.test(n)) return 'av';
   if(/^Sirsasana/.test(n)) return 'inv';
-  if(/Sarvangasana|Halasana|Karnapidasana|Hasta Sirsasana|Pincha|Karandavasana|Viparita|Urdhva Padmasana|Pindasana|Adho Mukha Svanasana/.test(n)) return 'inv';
+  if(/Sarvangasana|Halasana|Karnapidasana|Hasta Sirsasana|Pincha|Karandavasana|Vrschikasana|Sayanasana|Viparita Karani|Urdhva Padmasana|Pindasana|Adho Mukha Svanasana/.test(n)) return 'inv';
   if(/Parivrtta|Matsyendrasana|Bharadvaja|Jathara|Marichyasana C|Marichyasana D|Pasasana|Supta Urdhva Pada Vajrasana/.test(n)) return 'to';
-  if(/Dhanurasana|Bhujangasana|Sphinx|Ustrasana|Salabhasana|Purvattanasana|Matsyasana|Setu|Anahatasana|Uttana Padasana|Urdhva Mukha Svanasana|Chakravakasana|Anjaneyasana|Bhekasana|Kapotasana|Laghu Vajrasana|Supta Vajrasana/.test(n)) return 'ar';
-  if(/Paschimottanasana|Padangusthasana|Pada Hastasana|Parsvottanasana|Janu|Kurmasana|Baddha Konasana|Upavistha|Prasarita|Padottanasana|Triang|Balasana|Padmottanasana|Supta Konasana|Rajakapotasana|Hanumanasana|Pristhasana|Malasana|Gomukhasana|Apanasana|Eka Pada Sirsasana|Dwi Pada Sirsasana|Yoganidrasana|Krounchasana/.test(n)) return 'av';
+  if(/Dhanurasana|Bhujangasana|Sphinx|Ustrasana|Salabhasana|Purvattanasana|Matsyasana|Setu|Anahatasana|Uttana Padasana|Urdhva Mukha Svanasana|Chakravakasana|Anjaneyasana|Bhekasana|Kapotasana|Laghu Vajrasana|Supta Vajrasana|Viparita Dandasana|Viparita Salabhasana|Ganda Bherundasana|Natarajasana|Padangustha Dhanurasana/.test(n)) return 'ar';
+  if(/Paschimottanasana|Padangusthasana|Pada Hastasana|Parsvottanasana|Janu|Kurmasana|Baddha Konasana|Upavistha|Prasarita|Padottanasana|Triang|Balasana|Padmottanasana|Supta Konasana|Rajakapotasana|Hanumanasana|Pristhasana|Malasana|Gomukhasana|Apanasana|Eka Pada Sirsasana|Dwi Pada Sirsasana|Yoganidrasana|Krounchasana|Hanumanasana|Trivikramasana|Bhairavasana|Skandasana|Durvasana|Buddhasana|Kapilasana/.test(n)) return 'av';
   return '';
 }
 const ICO={av:'⬇',ar:'⬆',to:'↺',inv:'🙃'};
@@ -865,6 +955,15 @@ function checkImport(){
 const LVL_ORDER=['deb','fac','std','adv'];
 const LVL_LABEL={deb:'Débutant',fac:'Facile',std:'Standard',adv:'Avancé'};
 const VARIANTS={
+ 'Vasisthasana':{d:'Genou du bas au sol',f:'Pieds décalés',a:'Jambe haute tenue (vishvamitrasana prep)'},
+ 'Hanumanasana':{d:'Demi grand écart, blocs sous les mains',f:'Coussin sous la hanche avant',a:'Bras vers le ciel, buste vertical'},
+ 'Natarajasana':{d:'Cheville tenue, petite arche',f:'Sangle autour du pied',a:'Prise à deux mains par-dessus'},
+ 'Vrschikasana':{d:'Pincha au mur',f:'Genoux fléchis, pieds vers la tête',a:'Pieds sur le crâne'},
+ 'Viparita Dandasana':{d:'Pont sur la tête (setu)',f:'Depuis sirsasana, un pied au sol',a:'Jambes tendues, coudes ancrés'},
+ 'Astavakrasana':{d:'Jambes croisées sur un bras, fesses au sol',f:'Décollé court',a:'Transitions vers koundinyasana'},
+ 'Akarna Dhanurasana':{d:'Pied tiré vers la poitrine',f:'Pied à hauteur d\u2019épaule',a:'Pied derrière l\u2019oreille, jambe basse tendue'},
+ 'Raja Kapotasana':{d:'Ustrasana',f:'Kapotasana mains aux talons',a:'Prise des cuisses, tête aux pieds'},
+
  'Surya Namaskara A':{d:'Genoux au sol en chaturanga, cobra au lieu du chien tête en haut',f:'Genoux fléchis dans les flexions',a:'Transitions sautées, flottaison contrôlée'},
  'Surya Namaskara B':{d:'Marche au lieu du saut, genoux au sol',f:'Chaise à mi-hauteur',a:'Sauts légers, souffle inchangé'},
  'Padangusthasana':{d:'Genoux fléchis, mains sur les tibias',f:'Sangle sous les orteils',a:'Front aux tibias, jambes tendues'},
@@ -973,6 +1072,175 @@ function renderLvlChips(){
   el.innerHTML=LVL_ORDER.map(k=>`<button class="chip ${k===level?'on':''}" onclick="setLvl('${k}')">${LVL_LABEL[k]}</button>`).join('');
 }
 
+
+/* =====================================================
+   STYLES — Hatha, Yin, Vinyasa, Yoga & sport
+   Postures référencées par nom (résolues dans LIB), surcharges possibles.
+===================================================== */
+function resolvePoses(list){
+  return list.map(it=>{
+    const name=Array.isArray(it)?it[0]:it, over=Array.isArray(it)?(it[1]||{}):{};
+    const p=N(name)||{sk:name,fr:'',b:5};
+    return {...p,...over};
+  });
+}
+const STYLE_MENUS={
+ hatha:{
+  title:'Hatha yoga',
+  intro:'Postures tenues plus longtemps, rythme posé, symétrie avant/arrière. Le souffle reste naturel et profond.',
+  sessions:[
+   {name:'Hatha douce', badge:'DOUCE · ≈20 MIN',
+    desc:'Entrée en matière : mobilisation, postures simples tenues 8 souffles, relaxation généreuse.',
+    poses:[['Chakravakasana (chat-vache)',{b:10}],['Adho Mukha Svanasana',{b:8}],['Utthita Trikonasana',{b:8}],
+           ['Salamba Bhujangasana',{b:8}],['Balasana',{b:8}],['Baddha Konasana',{b:8}],
+           ['Jathara Parivartanasana',{b:8}],['Viparita Karani'],['Savasana',{t:240}]]},
+   {name:'Hatha classique', badge:'CLASSIQUE · ≈15 MIN',
+    desc:'Le socle traditionnel : debout, équilibre, flexion, extension, torsion, inversion — chaque famille visitée.',
+    poses:[['Chakravakasana (chat-vache)',{b:8}],['Adho Mukha Svanasana',{b:8}],['Utkatasana',{b:8}],
+           ['Virabhadrasana B',{b:8}],['Utthita Trikonasana',{b:8}],['Utthita Hasta Padangusthasana',{b:6}],
+           ['Paschimottanasana A',{b:10}],['Setu Bandha Sarvangasana',{b:10}],['Bhujangasana',{b:8}],
+           ['Ardha Matsyendrasana',{b:8}],['Salamba Sarvangasana',{b:12}],['Matsyasana',{b:8}],
+           ['Savasana',{t:300}]]},
+   {name:'Hatha complète', badge:'COMPLÈTE · ≈30 MIN',
+    desc:'La grande séance : tenue longue partout, progression debout → sol → inversions, gros savasana.',
+    poses:[['Chakravakasana (chat-vache)',{b:10}],['Adho Mukha Svanasana',{b:10}],['Surya Namaskara A — tour 1'],
+           ['Surya Namaskara A — tour 2'],['Utkatasana',{b:8}],['Virabhadrasana A',{b:8}],['Virabhadrasana B',{b:8}],
+           ['Utthita Trikonasana',{b:8}],['Parivrtta Trikonasana',{b:8}],['Prasarita Padottanasana A',{b:8}],
+           ['Anjaneyasana',{b:8}],['Paschimottanasana A',{b:10}],['Purvattanasana',{b:8}],
+           ['Janu Sirsasana A',{b:8}],['Setu Bandha Sarvangasana',{b:10}],['Dhanurasana',{b:6}],
+           ['Balasana',{b:8}],['Ardha Matsyendrasana',{b:8}],['Salamba Sarvangasana',{b:15}],
+           ['Halasana',{b:10}],['Matsyasana',{b:8}],['Sirsasana',{b:12}],['Balasana',{b:8}],
+           ['Savasana',{t:360}]]},
+  ]},
+ yin:{
+  title:'Yin yoga',
+  intro:'Tenues longues (2 à 5 min), muscles relâchés, cible les fascias et les tissus profonds. Installe-toi avec coussins et couvertures, ne force jamais.',
+  sessions:[
+   {name:'Yin hanches', badge:'HANCHES · ≈35 MIN',
+    desc:'Papillon, dragon, cygne : tout ce qui ouvre le bassin, en profondeur et sans effort.',
+    poses:[['Baddha Konasana',{t:240}],['Utthan Pristhasana',{t:150,b:undefined}],
+           ['Eka Pada Rajakapotasana',{t:180}],['Upavistha Konasana',{t:240}],
+           ['Supta Baddha Konasana',{t:240}],['Jathara Parivartanasana',{t:120}],
+           ['Viparita Karani',{t:300}],['Savasana',{t:300}]]},
+   {name:'Yin dos & épaules', badge:'DOS · ≈30 MIN',
+    desc:'Sphinx, cœur fondant, chenille, torsions au sol : la colonne dans tous ses plans, très lentement.',
+    poses:[['Balasana',{t:180}],['Anahatasana',{t:180}],['Salamba Bhujangasana',{t:240}],
+           ['Paschimottanasana A',{t:240}],['Setu Bandha Sarvangasana',{t:150}],
+           ['Jathara Parivartanasana',{t:150}],['Apanasana',{t:120}],['Savasana',{t:300}]]},
+   {name:'Yin complet', badge:'COMPLET · ≈45 MIN',
+    desc:'Le tour du corps en neuf stations longues, du bassin à la nuque.',
+    poses:[['Baddha Konasana',{t:210}],['Utthan Pristhasana',{t:150}],['Eka Pada Rajakapotasana',{t:180}],
+           ['Anahatasana',{t:180}],['Salamba Bhujangasana',{t:210}],['Paschimottanasana A',{t:240}],
+           ['Jathara Parivartanasana',{t:150}],['Supta Baddha Konasana',{t:210}],
+           ['Viparita Karani',{t:300}],['Savasana',{t:330}]]},
+  ]},
+ vinyasa:{
+  title:'Vinyasa yoga',
+  intro:'Enchaînements fluides, un mouvement par souffle. Plus libre que l\u2019ashtanga, même moteur : la respiration.',
+  sessions:[
+   {name:'Flow solaire', badge:'SOLAIRE · ≈20 MIN',
+    desc:'Montée en chaleur : salutations, guerriers enchaînés, équilibres, roue en pic.',
+    poses:[['Surya Namaskara A — tour 1'],['Surya Namaskara A — tour 2'],['Surya Namaskara B — tour 1'],
+           ['Surya Namaskara B — tour 2'],['Virabhadrasana A'],['Virabhadrasana B'],
+           ['Utthita Parsvakonasana'],['Parivrtta Utkatasana'],['Utthita Hasta Padangusthasana'],
+           ['Anjaneyasana'],['Navasana ×5',{b:15}],['Urdhva Dhanurasana ×3'],
+           ['Paschimottanasana'],['Salamba Sarvangasana',{b:10}],['Savasana',{t:180}]]},
+   {name:'Flow lunaire', badge:'LUNAIRE · ≈15 MIN',
+    desc:'Version douce du flow, pour le soir : transitions lentes, hanches, torsions, inversion réparatrice.',
+    poses:[['Chakravakasana (chat-vache)',{b:8}],['Adho Mukha Svanasana',{b:6}],['Surya Namaskara A — tour 1'],
+           ['Anjaneyasana',{b:6}],['Utthan Pristhasana',{b:6}],['Prasarita Padottanasana A',{b:6}],
+           ['Malasana',{b:8}],['Baddha Konasana',{b:8}],['Janu Sirsasana A',{b:6}],
+           ['Bharadvajasana',{b:6}],['Setu Bandha Sarvangasana',{b:8}],['Apanasana',{b:8}],
+           ['Viparita Karani'],['Savasana',{t:240}]]},
+   {name:'Flow équilibre', badge:'ÉQUILIBRE · ≈15 MIN',
+    desc:'Le fil rouge : la stabilité. Équilibres debout, corbeau, transitions contrôlées.',
+    poses:[['Surya Namaskara A — tour 1'],['Surya Namaskara A — tour 2'],['Surya Namaskara B — tour 1'],
+           ['Utkatasana'],['Utthita Hasta Padangusthasana',{b:6}],['Vatayanasana'],
+           ['Virabhadrasana A'],['Natarajasana'],['Malasana',{b:6}],['Bakasana A',{b:6}],
+           ['Navasana ×5',{b:15}],['Paschimottanasana A',{b:8}],['Setu Bandha Sarvangasana',{b:8}],
+           ['Salamba Sarvangasana',{b:10}],['Matsyasana',{b:6}],['Savasana',{t:240}]]},
+  ]},
+ sport:{
+  title:'Yoga & sport',
+  intro:'Séances ciblées sur les chaînes sollicitées par ta discipline — mobilité là où le sport raidit, récupération là où il tape.',
+  sessions:[
+   {name:'Surf', badge:'🏄 ≈20 MIN',
+    desc:'Épaules et thorax (rame), hanches (take-off), équilibre. Idéal après session ou la veille.',
+    poses:[['Chakravakasana (chat-vache)',{b:8}],['Adho Mukha Svanasana',{b:8}],['Anahatasana',{b:8}],
+           ['Salamba Bhujangasana',{b:8}],['Bhujangasana',{b:6}],['Anjaneyasana',{b:6}],
+           ['Utthan Pristhasana',{b:8}],['Malasana',{b:8}],['Virabhadrasana B',{b:6}],
+           ['Utthita Hasta Padangusthasana',{b:5}],['Ardha Matsyendrasana',{b:6}],
+           ['Eka Pada Rajakapotasana',{b:8}],['Viparita Karani'],['Savasana',{t:240}]]},
+   {name:'Escalade', badge:'🧗 ≈20 MIN',
+    desc:'Ouvre ce que le mur ferme : épaules, poitrine, fléchisseurs. Poignets et hanches en bonus.',
+    poses:[['Chakravakasana (chat-vache)',{b:8}],['Anahatasana',{b:10}],['Gomukhasana',{b:8}],
+           ['Ustrasana',{b:6}],['Purvattanasana',{b:6}],['Bhujangasana',{b:8}],
+           ['Anjaneyasana',{b:8}],['Malasana',{b:8}],['Eka Pada Rajakapotasana',{b:8}],
+           ['Bharadvajasana',{b:6}],['Setu Bandha Sarvangasana',{b:8}],['Balasana',{b:8}],
+           ['Viparita Karani'],['Savasana',{t:240}]]},
+   {name:'Ski de randonnée', badge:'⛷️ ≈20 MIN',
+    desc:'Quadriceps et psoas après la conversion, ischios après la trace, dos après le sac.',
+    poses:[['Adho Mukha Svanasana',{b:8}],['Anjaneyasana',{b:10}],['Ardha Hanumanasana',{b:8}],
+           ['Utthan Pristhasana',{b:8}],['Supta Padangusthasana',{b:8}],['Malasana',{b:8}],
+           ['Salabhasana',{b:6}],['Setu Bandha Sarvangasana',{b:8}],['Jathara Parivartanasana',{b:8}],
+           ['Apanasana',{b:8}],['Viparita Karani',{t:240}],['Savasana',{t:240}]]},
+   {name:'Trail', badge:'🏃⛰️ ≈20 MIN',
+    desc:'Descentes qui tassent, montées qui raccourcissent : ischios, mollets, hanches, et les jambes au mur.',
+    poses:[['Adho Mukha Svanasana',{b:10}],['Ardha Hanumanasana',{b:8}],['Anjaneyasana',{b:8}],
+           ['Supta Padangusthasana',{b:8}],['Eka Pada Rajakapotasana',{b:8}],['Malasana',{b:8}],
+           ['Paschimottanasana A',{b:8}],['Setu Bandha Sarvangasana',{b:8}],['Jathara Parivartanasana',{b:8}],
+           ['Viparita Karani',{t:300}],['Savasana',{t:240}]]},
+   {name:'Alpinisme', badge:'🏔️ ≈20 MIN',
+    desc:'Journée longue, sac lourd, terrain varié : hanches, dos, épaules, et la cage qui respire en altitude.',
+    poses:[['Chakravakasana (chat-vache)',{b:8}],['Adho Mukha Svanasana',{b:8}],['Anjaneyasana',{b:8}],
+           ['Utthan Pristhasana',{b:8}],['Malasana',{b:8}],['Anahatasana',{b:8}],
+           ['Salamba Bhujangasana',{b:8}],['Ustrasana',{b:6}],['Ardha Matsyendrasana',{b:8}],
+           ['Supta Padangusthasana',{b:8}],['Eka Pada Rajakapotasana',{b:8}],['Setu Bandha Sarvangasana',{b:8}],
+           ['Salamba Sarvangasana',{b:10}],['Matsyasana',{b:6}],['Viparita Karani',{t:240}],['Savasana',{t:300}]]},
+   {name:'Course à pied', badge:'🏃 ≈15 MIN',
+    desc:'Psoas, ischios, mollets : les trois raideurs du coureur, plus une torsion et la récup au mur.',
+    poses:[['Adho Mukha Svanasana',{b:10}],['Anjaneyasana',{b:8}],['Ardha Hanumanasana',{b:8}],
+           ['Supta Padangusthasana',{b:8}],['Eka Pada Rajakapotasana',{b:8}],
+           ['Paschimottanasana A',{b:8}],['Jathara Parivartanasana',{b:8}],
+           ['Viparita Karani',{t:240}],['Savasana',{t:180}]]},
+  ]},
+};
+let currentStyle='ash';
+function setStyle(k){
+  currentStyle=k; store.set('style',k);
+  renderStyleChips(); applyStyle();
+}
+function renderStyleChips(){
+  const el=document.getElementById('styleChips'); if(!el) return;
+  const labels={ash:'Ashtanga',hatha:'Hatha',yin:'Yin',vinyasa:'Vinyasa',sport:'Sport'};
+  el.innerHTML=Object.entries(labels).map(([k,l])=>`<button class="chip ${k===currentStyle?'on':''}" onclick="setStyle('${k}')">${l}</button>`).join('');
+}
+function applyStyle(){
+  const ash=document.getElementById('styleAsh'), other=document.getElementById('styleOther');
+  if(!ash||!other) return;
+  ash.style.display = currentStyle==='ash' ? 'block':'none';
+  if(currentStyle==='ash'){ other.innerHTML=''; return; }
+  const m=STYLE_MENUS[currentStyle];
+  let html=`<div class="card"><h2>${m.title}</h2><p class="sub">${m.intro}</p></div>`;
+  m.sessions.forEach((s,i)=>{
+    const poses=resolvePoses(s.poses);
+    html+=`<div class="card routine">
+      <span class="badge">${s.badge}</span>
+      <h2>${s.name}</h2>
+      <p class="sub">${s.desc}</p>
+      <p class="meta mono" style="margin-top:6px">${comp(poses)}</p>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" onclick="playStyle('${currentStyle}',${i})">▶ Démarrer</button>
+        <span class="meta">${poses.length} étapes · ${fmtDur(totalDur(poses))} à ta cadence</span>
+      </div></div>`;
+  });
+  other.innerHTML=html;
+}
+function playStyle(style,i){
+  const s=STYLE_MENUS[style].sessions[i];
+  startSession(resolvePoses(s.poses), STYLE_MENUS[style].title+' · '+s.name);
+}
+
 /* =====================================================
    HISTORIQUE & SUGGESTION INTELLIGENTE
 ===================================================== */
@@ -1046,7 +1314,7 @@ let savedSeqs = store.get('savedSeqs',[]);
 /* =====================================================
    UTILITAIRES
 ===================================================== */
-function poseDur(p){ return p.t ? p.t : p.b*cadence*(p.sides?2:1); }
+function poseDur(p){ return (p.t ? p.t : p.b*cadence) * (p.sides?2:1); }
 function fmtDur(s){ const m=Math.round(s/60); return m<1?'<1 min':`≈ ${m} min`; }
 function totalDur(list){ return list.reduce((a,p)=>a+poseDur(p),0); }
 function toast(msg){
@@ -1097,6 +1365,33 @@ function renderAsh(){
   document.getElementById('ashComp').textContent = comp(all)+' — dominante flexions avant : pense aux routines équilibrées en alternance.';
   renderAsh2();
 }
+function renderAdvSeries(sections,wrapId,playFnName){
+  const wrap=document.getElementById(wrapId); if(!wrap) return;
+  wrap.innerHTML='';
+  sections.forEach(sec=>{
+    const dur=fmtDur(totalDur(sec.poses));
+    const el=document.createElement('div'); el.className='card sec';
+    el.innerHTML=`
+      <button class="sec-head" onclick="this.parentNode.classList.toggle('open')">
+        <span><h3>${sec.name.replace(/^Série \d · /,'')}</h3><span class="meta">${sec.poses.length} postures · ${dur}</span></span>
+        <span class="chev">›</span>
+      </button>
+      <div class="sec-body">
+        ${sec.poses.map((p,i)=>`
+          <div class="pose">
+            <span class="row" style="gap:10px;flex:1;min-width:0">${svgFor(p.sk,26)}<span>${esc(p.sk)}<span class="fr">${esc(p.fr)}</span></span></span>
+            <span class="row" style="gap:8px">
+              <span class="b">${p.t?Math.round(p.t/60*10)/10+' min':p.b+' souffles'+(p.sides?' /côté':'')}</span>
+              <button class="addbtn" onclick="addToSeq('${sec.id}',${i})" aria-label="Ajouter au séquenceur">+</button>
+            </span>
+          </div>`).join('')}
+        <div class="row" style="margin-top:10px">
+          <button class="btn ghost small" onclick="${playFnName}('${sec.id}')">▶ Cette section</button>
+        </div>
+      </div>`;
+    wrap.appendChild(el);
+  });
+}
 function renderAsh2(){
   const wrap=document.getElementById('ash2Sections'); if(!wrap) return;
   wrap.innerHTML='';
@@ -1126,6 +1421,10 @@ function renderAsh2(){
   const all2=s2All();
   document.getElementById('ash2Total').textContent = fmtDur(totalDur(all2));
   document.getElementById('ash2Comp').textContent = comp(all2);
+  renderAdvSeries(ASH3,'ash3Sections','playAshtanga3');
+  renderAdvSeries(ASH4,'ash4Sections','playAshtanga4');
+  const el3=document.getElementById('ash3Total'); if(el3) el3.textContent=fmtDur(totalDur(sXAll(ASH3)));
+  const el4=document.getElementById('ash4Total'); if(el4) el4.textContent=fmtDur(totalDur(sXAll(ASH4)));
 }
 
 /* =====================================================
@@ -1310,7 +1609,7 @@ function toggleVoice(){
    PICTOGRAMMES DE POSTURES
 ===================================================== */
 const PICTO={"sun":{"c":[[50,50,16]],"l":["74,50 84,50","67,67 74,74","50,74 50,84","33,67 26,74","26,50 16,50","33,33 26,26","50,26 50,16","67,33 74,26"]},"fold":{"l":["52,86 52,46","52,46 34,60","44,52 36,78"],"h":[30,58]},"wide_fold":{"l":["24,86 50,46 76,86","50,46 50,62","44,60 40,80","56,60 60,80"],"h":[50,66]},"balance":{"l":["44,86 44,28","44,50 72,44","44,36 68,42","44,40 30,50"],"h":[44,20]},"chair":{"l":["58,86 58,66 44,52 44,34","44,44 24,30"],"h":[40,26]},"warrior1":{"l":["28,86 46,58","62,86 62,72 46,58","46,58 46,32","46,38 34,14","46,38 58,14"],"h":[46,20]},"warrior2":{"l":["24,86 36,58 50,50 50,32","66,86 50,50","24,42 76,42"],"h":[50,24]},"triangle":{"l":["28,86 52,54 76,86","52,54 32,38","32,38 30,66","32,38 36,14"],"h":[27,32]},"staff":{"l":["38,86 38,34 38,86 78,86","38,50 46,72"],"h":[38,26]},"seat_fold":{"l":["30,80 78,80","34,80 34,56 58,52","40,60 70,74"],"h":[62,48]},"twist":{"l":["34,86 34,52 42,32","58,86 44,66","30,44 56,40"],"h":[42,24]},"boat":{"l":["42,44 34,68 70,40","40,54 64,48"],"h":[36,32]},"armbal":{"l":["42,84 44,52","56,84 54,52","42,52 62,42","62,42 72,52 62,60"],"h":[30,44]},"butterfly":{"l":["50,34 50,62","50,62 32,52 44,70 50,62","50,62 68,52 56,70 50,62","40,44 34,60","60,44 66,60"],"h":[50,26]},"wide_seat":{"l":["50,38 50,68","50,60 24,80","50,60 76,80","42,48 30,72","58,48 70,72"],"h":[50,30]},"supine_leg":{"l":["14,82 66,82 88,82","56,82 58,40","40,74 56,54"],"h":[20,74]},"recline_twist":{"l":["14,80 50,80","50,80 66,58 78,74","30,72 64,66"],"h":[20,72]},"savasana":{"l":["24,80 88,80","34,84 40,88","48,84 54,88"],"h":[16,72]},"bridge":{"l":["14,80 24,64 56,52 70,68 70,86","24,72 24,86"],"h":[18,72]},"wheel":{"l":["24,80 24,60 38,42 60,42 74,62 74,84","24,80 18,86"],"h":[20,66]},"shoulderstand":{"l":["20,86 48,80","44,80 48,52 50,16","40,70 48,60"],"h":[26,80]},"plow":{"l":["18,84 46,80","44,80 52,54 76,74","36,70 48,60"],"h":[24,78]},"fish":{"l":["86,78 50,76","50,76 38,60 28,72","44,70 54,62"],"h":[24,76]},"headstand":{"l":["34,86 58,86","46,72 46,16","46,44 40,28","40,80 46,68","52,80 46,68"],"h":[46,80]},"child":{"l":["30,80 44,60 66,60 70,80","70,80 78,80","30,80 18,76"],"h":[24,72]},"lotus":{"l":["50,34 50,62","32,70 50,58 68,70 32,70","38,46 30,62","62,46 70,62"],"h":[50,24]},"catcow":{"l":["30,54 42,42 62,44 70,54","32,54 32,84","68,54 68,84"],"h":[24,48]},"cobra":{"l":["32,48 38,66 86,72","36,64 30,50","44,68 44,50"],"h":[26,38]},"locust":{"l":["26,66 44,72 62,66 82,54","36,72 30,62"],"h":[20,60]},"bow":{"l":["32,54 44,70 60,68 72,50","34,50 66,44","72,50 66,44"],"h":[26,44]},"camel":{"l":["58,86 58,64 46,44 42,30","44,40 62,52","58,64 74,66"],"h":[38,24]},"pigeon":{"l":["34,50 40,70 86,76","40,70 22,74","36,64 28,54"],"h":[28,40]},"squat":{"l":["56,84 56,62 38,66","38,66 44,40","44,48 58,54","30,84 38,66"],"h":[44,30]},"downdog":{"l":["22,84 44,42 78,84","44,42 30,62"],"h":[30,68]}};
-const PMAP={"Surya Namaskara A":"sun","Surya Namaskara B":"sun","Padangusthasana":"fold","Pada Hastasana":"fold","Parsvottanasana":"fold","Ardha Baddha Padmottanasana":"fold","Prasarita Padottanasana A":"wide_fold","Prasarita Padottanasana B":"wide_fold","Prasarita Padottanasana C":"wide_fold","Prasarita Padottanasana D":"wide_fold","Utthita Hasta Padangusthasana":"balance","Utkatasana":"chair","Parivrtta Utkatasana":"chair","Virabhadrasana A":"warrior1","Anjaneyasana":"warrior1","Utthan Pristhasana":"warrior1","Virabhadrasana B":"warrior2","Utthita Parsvakonasana":"warrior2","Parivrtta Parsvakonasana":"warrior2","Utthita Trikonasana":"triangle","Parivrtta Trikonasana":"triangle","Dandasana":"staff","Paschimottanasana":"seat_fold","Paschimottanasana A":"seat_fold","Paschimottanasana C":"seat_fold","Ardha Baddha Padma Paschimottanasana":"seat_fold","Triang Mukha Eka Pada Paschimottanasana":"seat_fold","Janu Sirsasana A":"seat_fold","Janu Sirsasana B":"seat_fold","Janu Sirsasana C":"seat_fold","Urdhva Mukha Paschimottanasana":"seat_fold","Kurmasana":"seat_fold","Supta Kurmasana":"seat_fold","Marichyasana A":"twist","Marichyasana B":"twist","Marichyasana C":"twist","Marichyasana D":"twist","Ardha Matsyendrasana":"twist","Bharadvajasana":"twist","Navasana":"boat","Ubhaya Padangusthasana":"boat","Bhujapidasana":"armbal","Kukkutasana":"armbal","Utplutih":"armbal","Baddha Konasana":"butterfly","Supta Baddha Konasana":"butterfly","Gomukhasana":"butterfly","Upavistha Konasana":"wide_seat","Supta Konasana":"wide_seat","Supta Padangusthasana":"supine_leg","Apanasana":"supine_leg","Jathara Parivartanasana":"recline_twist","Savasana":"savasana","Setu Bandha Sarvangasana":"bridge","Setu Bandhasana":"bridge","Purvattanasana":"bridge","Urdhva Dhanurasana":"wheel","Salamba Sarvangasana":"shoulderstand","Urdhva Padmasana":"shoulderstand","Pindasana":"shoulderstand","Viparita Karani":"shoulderstand","Halasana":"plow","Karnapidasana":"plow","Matsyasana":"fish","Uttana Padasana":"fish","Sirsasana":"headstand","Balasana":"child","Yoga Mudra":"child","Anahatasana":"child","Padmasana":"lotus","Baddha Padmasana":"lotus","Garbha Pindasana":"lotus","Chakravakasana (chat-vache)":"catcow","Bhujangasana":"cobra","Urdhva Mukha Svanasana":"cobra","Salamba Bhujangasana":"cobra","Salabhasana":"locust","Dhanurasana":"bow","Ustrasana":"camel","Eka Pada Rajakapotasana":"pigeon","Ardha Hanumanasana":"pigeon","Malasana":"squat","Adho Mukha Svanasana":"downdog","Navasana ×5":"boat","Urdhva Dhanurasana ×3":"wheel","Pasasana":"twist","Krounchasana":"boat","Salabhasana A":"locust","Salabhasana B":"locust","Bhekasana":"bow","Parsva Dhanurasana":"bow","Laghu Vajrasana":"camel","Kapotasana":"wheel","Supta Vajrasana":"fish","Bakasana":"armbal","Eka Pada Sirsasana":"wide_seat","Dwi Pada Sirsasana":"wide_seat","Yoganidrasana":"supine_leg","Tittibhasana":"armbal","Pincha Mayurasana":"headstand","Karandavasana":"headstand","Mayurasana":"armbal","Nakrasana":"locust","Vatayanasana":"balance","Parighasana":"triangle","Supta Urdhva Pada Vajrasana":"recline_twist","Mukta Hasta Sirsasana":"headstand","Baddha Hasta Sirsasana":"headstand"};
+const PMAP={"Surya Namaskara A":"sun","Surya Namaskara B":"sun","Padangusthasana":"fold","Pada Hastasana":"fold","Parsvottanasana":"fold","Ardha Baddha Padmottanasana":"fold","Prasarita Padottanasana A":"wide_fold","Prasarita Padottanasana B":"wide_fold","Prasarita Padottanasana C":"wide_fold","Prasarita Padottanasana D":"wide_fold","Utthita Hasta Padangusthasana":"balance","Utkatasana":"chair","Parivrtta Utkatasana":"chair","Virabhadrasana A":"warrior1","Anjaneyasana":"warrior1","Utthan Pristhasana":"warrior1","Virabhadrasana B":"warrior2","Utthita Parsvakonasana":"warrior2","Parivrtta Parsvakonasana":"warrior2","Utthita Trikonasana":"triangle","Parivrtta Trikonasana":"triangle","Dandasana":"staff","Paschimottanasana":"seat_fold","Paschimottanasana A":"seat_fold","Paschimottanasana C":"seat_fold","Ardha Baddha Padma Paschimottanasana":"seat_fold","Triang Mukha Eka Pada Paschimottanasana":"seat_fold","Janu Sirsasana A":"seat_fold","Janu Sirsasana B":"seat_fold","Janu Sirsasana C":"seat_fold","Urdhva Mukha Paschimottanasana":"seat_fold","Kurmasana":"seat_fold","Supta Kurmasana":"seat_fold","Marichyasana A":"twist","Marichyasana B":"twist","Marichyasana C":"twist","Marichyasana D":"twist","Ardha Matsyendrasana":"twist","Bharadvajasana":"twist","Navasana":"boat","Ubhaya Padangusthasana":"boat","Bhujapidasana":"armbal","Kukkutasana":"armbal","Utplutih":"armbal","Baddha Konasana":"butterfly","Supta Baddha Konasana":"butterfly","Gomukhasana":"butterfly","Upavistha Konasana":"wide_seat","Supta Konasana":"wide_seat","Supta Padangusthasana":"supine_leg","Apanasana":"supine_leg","Jathara Parivartanasana":"recline_twist","Savasana":"savasana","Setu Bandha Sarvangasana":"bridge","Setu Bandhasana":"bridge","Purvattanasana":"bridge","Urdhva Dhanurasana":"wheel","Salamba Sarvangasana":"shoulderstand","Urdhva Padmasana":"shoulderstand","Pindasana":"shoulderstand","Viparita Karani":"shoulderstand","Halasana":"plow","Karnapidasana":"plow","Matsyasana":"fish","Uttana Padasana":"fish","Sirsasana":"headstand","Balasana":"child","Yoga Mudra":"child","Anahatasana":"child","Padmasana":"lotus","Baddha Padmasana":"lotus","Garbha Pindasana":"lotus","Chakravakasana (chat-vache)":"catcow","Bhujangasana":"cobra","Urdhva Mukha Svanasana":"cobra","Salamba Bhujangasana":"cobra","Salabhasana":"locust","Dhanurasana":"bow","Ustrasana":"camel","Eka Pada Rajakapotasana":"pigeon","Ardha Hanumanasana":"pigeon","Malasana":"squat","Adho Mukha Svanasana":"downdog","Navasana ×5":"boat","Urdhva Dhanurasana ×3":"wheel","Pasasana":"twist","Krounchasana":"boat","Salabhasana A":"locust","Salabhasana B":"locust","Bhekasana":"bow","Parsva Dhanurasana":"bow","Laghu Vajrasana":"camel","Kapotasana":"wheel","Supta Vajrasana":"fish","Bakasana":"armbal","Eka Pada Sirsasana":"wide_seat","Dwi Pada Sirsasana":"wide_seat","Yoganidrasana":"supine_leg","Tittibhasana":"armbal","Pincha Mayurasana":"headstand","Karandavasana":"headstand","Mayurasana":"armbal","Nakrasana":"locust","Vatayanasana":"balance","Parighasana":"triangle","Supta Urdhva Pada Vajrasana":"recline_twist","Mukta Hasta Sirsasana":"headstand","Baddha Hasta Sirsasana":"headstand","Vasisthasana":"triangle","Vishvamitrasana":"triangle","Kasyapasana":"triangle","Chakorasana":"armbal","Urdhva Kukkutasana":"armbal","Galavasana":"armbal","Eka Pada Bakasana":"armbal","Koundinyasana":"armbal","Astavakrasana":"armbal","Bhairavasana":"wide_seat","Skandasana":"wide_seat","Durvasana":"balance","Purna Matsyendrasana":"twist","Viranchyasana":"twist","Viparita Dandasana":"wheel","Eka Pada Viparita Dandasana":"wheel","Viparita Salabhasana":"locust","Ganda Bherundasana":"locust","Hanumanasana":"pigeon","Supta Trivikramasana":"supine_leg","Trivikramasana":"balance","Natarajasana":"balance","Raja Kapotasana":"wheel","Eka Pada Raja Kapotasana":"pigeon","Mulabandhasana":"lotus","Nahusasana":"wide_seat","Buddhasana":"wide_seat","Kapilasana":"wide_seat","Vrschikasana":"headstand","Sayanasana":"headstand","Akarna Dhanurasana":"boat","Padangustha Dhanurasana":"bow","Marichyasana E":"twist","Marichyasana F":"twist","Marichyasana G":"twist","Marichyasana H":"twist"};
 function svgFor(sk,size,color){
   const a=lookup(PMAP,sk); if(!a||!PICTO[a]) return '';
   const p=PICTO[a], col=color||'var(--aqua)';
@@ -1430,6 +1729,18 @@ const CUES={
  'Supta Urdhva Pada Vajrasana':'Épaule au sol pendant la roulade',
  'Mukta Hasta Sirsasana':'Charge légère sur le crâne, bras actifs',
  'Baddha Hasta Sirsasana':'Coudes ancrés, gainage complet',
+ 'Vasisthasana':'Une ligne des talons au sommet du crâne',
+ 'Astavakrasana':'Bras qui serrent, regard devant',
+ 'Koundinyasana':'Coudes à angle droit, jambes vives',
+ 'Urdhva Kukkutasana':'Lotus haut, bras solides',
+ 'Purna Matsyendrasana':'Grandis avant de tourner',
+ 'Viparita Dandasana':'Coudes ancrés, cœur ouvert',
+ 'Hanumanasana':'Hanches carrées, patience',
+ 'Natarajasana':'Poitrine haute, bassin stable',
+ 'Raja Kapotasana':'Ouvre les hanches et les épaules ensemble',
+ 'Vrschikasana':'Avant-bras forts, regard au sol',
+ 'Akarna Dhanurasana':'Dos long, coude qui tire',
+ 'Mulabandhasana':'Souffle fin, racine active',
  'Viparita Karani':'Jambes lourdes dans le mur',
 };
 function baseName(sk){ return sk.replace(/ — tour \d+$/,'').replace(/ ×\d+$/,'').replace(/ — bis$/,''); }
@@ -1476,6 +1787,22 @@ function s2All(){
     ...ASH2.flatMap(s=>s.poses),
     ...ASH.find(s=>s.id==='finale').poses,
   ];
+}
+function sXAll(series){
+  return [
+    ...ASH.find(s=>s.id==='surya').poses,
+    ...ASH.find(s=>s.id==='debout').poses,
+    ...series.flatMap(s=>s.poses),
+    ...ASH.find(s=>s.id==='finale').poses,
+  ];
+}
+function playAshtanga3(what){
+  const poses = what==='all' ? sXAll(ASH3) : ASH3.find(s=>s.id===what).poses;
+  startSession(poses, what==='all' ? 'Ashtanga · série 3' : ASH3.find(s=>s.id===what).name);
+}
+function playAshtanga4(what){
+  const poses = what==='all' ? sXAll(ASH4) : ASH4.find(s=>s.id===what).poses;
+  startSession(poses, what==='all' ? 'Ashtanga · série 4' : ASH4.find(s=>s.id===what).name);
 }
 function playAshtanga2(what){
   const poses = what==='all' ? s2All() : ASH2.find(s=>s.id===what).poses;
@@ -1608,7 +1935,8 @@ renderBrSettings();
 document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
 document.getElementById('voiceBtn').textContent = TTS ? (voiceOn?'Activé':'Coupé') : 'Non supporté';
 renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib(); level=store.get('lvl','std');
-renderGenChips(); renderWeek(); renderGenHint(); renderLvlChips(); checkImport();
+currentStyle=store.get('style','ash');
+renderGenChips(); renderWeek(); renderGenHint(); renderLvlChips(); renderStyleChips(); applyStyle(); checkImport();
 
 /* PWA — service worker (HTTPS requis) */
 if('serviceWorker' in navigator){
