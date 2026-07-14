@@ -217,7 +217,7 @@ select{
 <body>
 
 <header class="hero">
-  <span class="ver mono">v1.9.0</span>
+  <span class="ver mono">v2.0.0</span>
   <h1>Tapis <span>·</span> yoga</h1>
   <p>Séances équilibrées avant / arrière, centrées sur le souffle : extensions, torsions, inversions. La série 1 quand tu veux la tradition.</p>
   <div class="waves" aria-hidden="true">
@@ -1203,6 +1203,25 @@ const STYLE_MENUS={
            ['Supta Padangusthasana',{b:8}],['Eka Pada Rajakapotasana',{b:8}],
            ['Paschimottanasana A',{b:8}],['Jathara Parivartanasana',{b:8}],
            ['Viparita Karani',{t:240}],['Savasana',{t:180}]]},
+   {name:'Natation', badge:'🏊 ≈20 MIN',
+    desc:'Épaules et rotation thoracique (crawl), chevilles souples (battement), dos décompressé après les longueurs.',
+    poses:[['Chakravakasana (chat-vache)',{b:8}],['Adho Mukha Svanasana',{b:8}],['Anahatasana',{b:8}],
+           ['Gomukhasana',{b:8}],['Salamba Bhujangasana',{b:8}],['Ustrasana',{b:6}],
+           ['Bharadvajasana',{b:6}],['Ardha Matsyendrasana',{b:8}],['Supta Padangusthasana',{b:6}],
+           ['Setu Bandha Sarvangasana',{b:8}],['Balasana',{b:8}],['Viparita Karani',{t:180}],['Savasana',{t:180}]]},
+   {name:'Apnée', badge:'🌊 ≈25 MIN',
+    desc:'Souplesse de la cage thoracique et détente parasympathique : ouvertures costales, tenues longues, relâchement profond. Sans exercice respiratoire — garde ça pour ton travail dédié.',
+    poses:[['Balasana',{t:120}],['Anahatasana',{t:150}],['Salamba Bhujangasana',{t:150}],
+           ['Ustrasana',{b:6}],['Matsyasana',{b:8}],['Supta Baddha Konasana',{t:180}],
+           ['Jathara Parivartanasana',{t:120}],['Setu Bandha Sarvangasana',{b:8}],
+           ['Viparita Karani',{t:240}],['Savasana',{t:300}]]},
+   {name:'Vélo', badge:'🚴 ≈20 MIN',
+    desc:'Rouvre ce que la position ferme : hanches et psoas raccourcis, dos rond, nuque et poignets tendus.',
+    poses:[['Chakravakasana (chat-vache)',{b:8}],['Adho Mukha Svanasana',{b:8}],['Anjaneyasana',{b:10}],
+           ['Utthan Pristhasana',{b:8}],['Salamba Bhujangasana',{b:8}],['Ustrasana',{b:6}],
+           ['Setu Bandha Sarvangasana',{b:8}],['Supta Padangusthasana',{b:6}],
+           ['Eka Pada Rajakapotasana',{b:8}],['Ardha Matsyendrasana',{b:6}],
+           ['Balasana',{b:8}],['Viparita Karani',{t:240}],['Savasana',{t:180}]]},
   ]},
 };
 let currentStyle='ash';
@@ -1222,15 +1241,22 @@ function applyStyle(){
   if(currentStyle==='ash'){ other.innerHTML=''; return; }
   const m=STYLE_MENUS[currentStyle];
   let html=`<div class="card"><h2>${m.title}</h2><p class="sub">${m.intro}</p></div>`;
+  if(currentStyle==='sport'){
+    const opts=[[0,'Native'],[10,'10\u2032'],[15,'15\u2032'],[20,'20\u2032'],[30,'30\u2032'],[45,'45\u2032'],[60,'1 h']];
+    html+=`<div class="card"><h2>Durée</h2><p class="sub">Ajuste chaque séance à ton temps disponible.</p>
+      <div class="chips" id="sportTime" style="margin-top:10px">${opts.map(([v,l])=>`<button class="chip ${v===sportMin?'on':''}" data-v="${v}" onclick="setSportMin(${v})">${l}</button>`).join('')}</div></div>`;
+  }
   m.sessions.forEach((s,i)=>{
-    const poses=resolvePoses(s.poses);
+    const raw=resolvePoses(s.poses);
+    const poses=currentStyle==='sport'? scaleSession(raw,sportMin) : raw;
+    const playFn=currentStyle==='sport'? `playStyleScaled('${currentStyle}',${i})` : `playStyle('${currentStyle}',${i})`;
     html+=`<div class="card routine">
       <span class="badge">${s.badge}</span>
       <h2>${s.name}</h2>
       <p class="sub">${s.desc}</p>
       <p class="meta mono" style="margin-top:6px">${comp(poses)}</p>
       <div class="row" style="margin-top:10px">
-        <button class="btn" onclick="playStyle('${currentStyle}',${i})">▶ Démarrer</button>
+        <button class="btn" onclick="${playFn}">▶ Démarrer</button>
         <span class="meta">${poses.length} étapes · ${fmtDur(totalDur(poses))} à ta cadence</span>
       </div></div>`;
   });
@@ -1239,6 +1265,59 @@ function applyStyle(){
 function playStyle(style,i){
   const s=STYLE_MENUS[style].sessions[i];
   startSession(resolvePoses(s.poses), STYLE_MENUS[style].title+' · '+s.name);
+}
+
+/* Ajustement du temps (sport) : 10→60 min.
+   La dernière posture (Savasana) et l'avant-dernière (récup au mur) sont préservées ;
+   le corps est étiré ou réduit pour approcher la cible. */
+let sportMin=0; // 0 = durée native ; chargé depuis le stockage au démarrage
+function scaleSession(poses,targetMin){
+  let base=poses.map(p=>({...p}));
+  if(!targetMin) return base;
+  const target=targetMin*60;
+  // séparer noyau / clôture (2 dernières si ce sont des tenues longues type mur+savasana)
+  let tail=[];
+  while(base.length>3 && base[base.length-1].t && base[base.length-1].t>=120){ tail.unshift(base.pop()); }
+  let tailT=tail.reduce((a,p)=>a+poseDur(p),0);
+  // si la clôture seule dépasse la moitié de la cible, la comprimer aussi
+  if(tailT > target*0.5 && tail.length){
+    const tf=Math.max(.4,(target*0.4)/tailT);
+    tail.forEach(p=>{ if(p.t) p.t=Math.max(60,Math.round(p.t*tf)); });
+    tailT=tail.reduce((a,p)=>a+poseDur(p),0);
+  }
+  const budget=Math.max(target-tailT, target*0.5);
+  let bodyT=base.reduce((a,p)=>a+poseDur(p),0);
+  const f=budget/Math.max(bodyT,1);
+  // borner le facteur pour rester réaliste
+  const cf=Math.max(.6,Math.min(2.2,f));
+  base.forEach(p=>{
+    if(p.b) p.b=Math.max(3,Math.min(30,Math.round(p.b*cf)));
+    else if(p.t) p.t=Math.max(30,Math.min(600,Math.round(p.t*cf)));
+  });
+  // si encore trop court, répéter le corps (hors répétitions immédiates)
+  bodyT=base.reduce((a,p)=>a+poseDur(p),0);
+  let guard=0;
+  while(bodyT+tailT < target*0.9 && guard<40){
+    const src=base[guard % base.length];
+    const clone={...src};
+    base.push(clone); bodyT+=poseDur(clone); guard++;
+  }
+  // si trop long, retirer depuis la fin du corps
+  while(base.length>2 && bodyT+tailT > target*1.15){
+    const rm=base.pop(); bodyT-=poseDur(rm);
+  }
+  return [...base,...tail];
+}
+function sportDur(poses){ return scaleSession(poses,sportMin).reduce((a,p)=>a+poseDur(p),0); }
+function setSportMin(v){
+  sportMin=v; store.set('sportMin',v);
+  document.querySelectorAll('#sportTime .chip').forEach(c=>c.classList.toggle('on',+c.dataset.v===v));
+  applyStyle();
+}
+function playStyleScaled(style,i){
+  const s=STYLE_MENUS[style].sessions[i];
+  const poses=scaleSession(resolvePoses(s.poses),sportMin);
+  startSession(poses, STYLE_MENUS[style].title+' · '+s.name);
 }
 
 /* =====================================================
@@ -1936,6 +2015,7 @@ document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
 document.getElementById('voiceBtn').textContent = TTS ? (voiceOn?'Activé':'Coupé') : 'Non supporté';
 renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib(); level=store.get('lvl','std');
 currentStyle=store.get('style','ash');
+sportMin=store.get('sportMin',0);
 renderGenChips(); renderWeek(); renderGenHint(); renderLvlChips(); renderStyleChips(); applyStyle(); checkImport();
 
 /* PWA — service worker (HTTPS requis) */
