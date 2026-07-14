@@ -150,6 +150,12 @@ select{
 .gen-pose .b{color:var(--air);font-size:.76rem;white-space:nowrap}
 .balbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:10px 0 6px;background:var(--deep3)}
 .balbar i{display:block;height:100%}
+.preview{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.pv-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(111,214,201,.1)}
+.pv-row:last-child{border-bottom:none}
+.pv-nm{flex:1;min-width:0;font-size:.86rem}
+.pv-nm small{display:block;color:var(--dim);font-size:.72rem}
+.pv-b{color:var(--air);font-size:.76rem;white-space:nowrap;font-family:'Spline Sans Mono',monospace}
 
 /* ---------- Lecteur ---------- */
 #player{
@@ -217,7 +223,7 @@ select{
 <body>
 
 <header class="hero">
-  <span class="ver mono">v2.0.0</span>
+  <span class="ver mono">v2.1.0</span>
   <h1>Tapis <span>·</span> yoga</h1>
   <p>Séances équilibrées avant / arrière, centrées sur le souffle : extensions, torsions, inversions. La série 1 quand tu veux la tradition.</p>
   <div class="waves" aria-hidden="true">
@@ -1257,8 +1263,11 @@ function applyStyle(){
       <p class="meta mono" style="margin-top:6px">${comp(poses)}</p>
       <div class="row" style="margin-top:10px">
         <button class="btn" onclick="${playFn}">▶ Démarrer</button>
-        <span class="meta">${poses.length} étapes · ${fmtDur(totalDur(poses))} à ta cadence</span>
-      </div></div>`;
+        <button class="btn ghost small" onclick="toggleCard(this)">▾ Voir la séance</button>
+        <span class="meta">${poses.length} étapes · ${fmtDur(totalDur(poses))}</span>
+      </div>
+      ${posePreview(poses)}
+      </div>`;
   });
   other.innerHTML=html;
 }
@@ -1318,6 +1327,17 @@ function playStyleScaled(style,i){
   const s=STYLE_MENUS[style].sessions[i];
   const poses=scaleSession(resolvePoses(s.poses),sportMin);
   startSession(poses, STYLE_MENUS[style].title+' · '+s.name);
+}
+
+/* Aperçu dépliable d'une liste de postures (sans démarrer) */
+function posePreview(poses){
+  return `<div class="preview">${poses.map(p=>`
+    <div class="pv-row">${svgFor(p.sk,22)}<span class="pv-nm">${esc(p.sk)}${p.side?' <span class="meta">('+esc(p.side)+')</span>':''}<small>${esc(p.fr||'')}</small></span>
+    <span class="pv-b">${p.t?Math.round(p.t/60*10)/10+' min':p.b+'×'+(p.sides?' /c':'')}</span></div>`).join('')}</div>`;
+}
+function toggleCard(btn){
+  const pv=btn.closest('.routine').querySelector('.preview');
+  if(pv){ const open=pv.style.display==='block'; pv.style.display=open?'none':'block'; btn.textContent=open?'▾ Voir la séance':'▴ Masquer'; }
 }
 
 /* =====================================================
@@ -1518,11 +1538,12 @@ function renderRoutines(){
       <h2>${r.name}</h2>
       <p class="sub">${r.desc}</p>
       <p class="meta mono" style="margin-top:6px">${comp(r.poses)}</p>
-      <ul>${r.poses.slice(0,4).map(p=>`<li>${esc(p.sk)}</li>`).join('')}<li>… ${r.poses.length} étapes au total</li></ul>
-      <div class="row">
+      <div class="row" style="margin-top:10px">
         <button class="btn" onclick="playRoutine(${i})">▶ Démarrer</button>
-        <span class="meta">${fmtDur(totalDur(r.poses))} à ta cadence</span>
-      </div>`;
+        <button class="btn ghost small" onclick="toggleCard(this)">▾ Voir la séance</button>
+        <span class="meta">${r.poses.length} étapes · ${fmtDur(totalDur(r.poses))}</span>
+      </div>
+      ${posePreview(r.poses)}`;
     wrap.appendChild(el);
   });
 }
