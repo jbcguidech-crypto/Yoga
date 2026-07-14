@@ -1,5 +1,5 @@
-/* Tapis — service worker */
-const VERSION = 'tapis-v1.9.0';
+/* Yoga — service worker */
+const VERSION = 'yoga-v2.4.0';
 const CORE = [
   './',
   './index.html',
