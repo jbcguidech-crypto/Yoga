@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#08252e">
+<meta name="theme-color" content="#f4f7f6">
 <title>Yoga 2.0 — Routines</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
@@ -237,7 +237,7 @@ select{
 <body>
 
 <header class="hero">
-  <span class="ver mono">v2.6.1</span>
+  <span class="ver mono">v2.7.0</span>
   <h1>Yoga <span>2.0</span></h1>
   <p>Séances équilibrées avant / arrière, centrées sur le souffle : extensions, torsions, inversions. La série 1 quand tu veux la tradition.</p>
   <div class="waves" aria-hidden="true">
@@ -253,13 +253,17 @@ select{
 <section id="panel-ash" class="panel on">
   <div class="chips" id="styleChips" style="margin:4px 0 12px"></div>
   <div id="styleAsh">
+  <div class="card"><h2>Durée</h2><p class="sub">Ajuste les séances complètes à ton temps disponible.</p>
+    <div class="chips" id="ashTime" style="margin-top:10px"></div></div>
   <div class="card">
     <h2>Série 1 · Yoga Chikitsa</h2>
     <p class="sub">Séquence traditionnelle complète, guidée souffle par souffle.</p>
     <div class="row" style="margin-top:12px">
       <button class="btn" onclick="playAshtanga('all')">▶ Séance complète</button>
+      <button class="btn ghost small" onclick="previewSeries('s1',this)">▾ Voir la séance</button>
       <span class="meta" id="ashTotal"></span>
     </div>
+    <div class="preview" id="pv-s1"></div>
     <p class="meta" id="ashComp" style="margin-top:8px"></p>
   </div>
   <div id="ashSections"></div>
@@ -269,8 +273,10 @@ select{
     <p class="sub">Série intermédiaire : extensions profondes, jambes derrière la tête, équilibres. La séance complète inclut salutations, postures debout et finale de la série 1.</p>
     <div class="row" style="margin-top:12px">
       <button class="btn" onclick="playAshtanga2('all')">▶ Séance complète</button>
+      <button class="btn ghost small" onclick="previewSeries('s2',this)">▾ Voir la séance</button>
       <span class="meta" id="ash2Total"></span>
     </div>
+    <div class="preview" id="pv-s2"></div>
     <p class="meta" id="ash2Comp" style="margin-top:8px"></p>
   </div>
   <div id="ash2Sections"></div>
@@ -280,8 +286,10 @@ select{
     <p class="sub">Série avancée A : équilibres sur les mains, jambe derrière la tête, grands écarts, extensions profondes. L’ordre exact varie selon les lignées.</p>
     <div class="row" style="margin-top:12px">
       <button class="btn" onclick="playAshtanga3('all')">▶ Séance complète</button>
+      <button class="btn ghost small" onclick="previewSeries('s3',this)">▾ Voir la séance</button>
       <span class="meta" id="ash3Total"></span>
     </div>
+    <div class="preview" id="pv-s3"></div>
   </div>
   <div id="ash3Sections"></div>
 
@@ -290,8 +298,10 @@ select{
     <p class="sub">Série avancée B : racines, inversions extrêmes, arcs et prises. Les séries 5 et 6 ne sont pratiquées que par une poignée de yogis et leurs séquences publiées divergent trop pour être retranscrites fidèlement.</p>
     <div class="row" style="margin-top:12px">
       <button class="btn" onclick="playAshtanga4('all')">▶ Séance complète</button>
+      <button class="btn ghost small" onclick="previewSeries('s4',this)">▾ Voir la séance</button>
       <span class="meta" id="ash4Total"></span>
     </div>
+    <div class="preview" id="pv-s4"></div>
   </div>
   <div id="ash4Sections"></div>
   </div>
@@ -388,10 +398,6 @@ select{
       <span>Écran allumé pendant la séance</span>
       <span class="meta" id="wakeInfo">auto</span>
     </div>
-    <div class="set-row">
-      <span>Thème</span>
-    </div>
-    <div class="chips" id="themeChips" style="margin-top:-4px"></div>
     <div class="set-row">
       <span>Niveau de pratique</span>
     </div>
@@ -1265,15 +1271,16 @@ function applyStyle(){
   if(currentStyle==='ash'){ other.innerHTML=''; return; }
   const m=STYLE_MENUS[currentStyle];
   let html=`<div class="card"><h2>${m.title}</h2><p class="sub">${m.intro}</p></div>`;
-  if(currentStyle==='sport'){
-    const opts=[[0,'Native'],[10,'10\u2032'],[15,'15\u2032'],[20,'20\u2032'],[30,'30\u2032'],[45,'45\u2032'],[60,'1 h']];
-    html+=`<div class="card"><h2>Durée</h2><p class="sub">Ajuste chaque séance à ton temps disponible.</p>
-      <div class="chips" id="sportTime" style="margin-top:10px">${opts.map(([v,l])=>`<button class="chip ${v===sportMin?'on':''}" data-v="${v}" onclick="setSportMin(${v})">${l}</button>`).join('')}</div></div>`;
-  }
+  const opts=[[0,'Native'],[10,'10\u2032'],[15,'15\u2032'],[20,'20\u2032'],[30,'30\u2032'],[45,'45\u2032'],[60,'1 h']];
+  const minMin = currentStyle==='yin' ? 20 : 10;
+  const shown = opts.filter(([v])=> v===0 || v>=minMin);
+  const note = currentStyle==='yin' ? ' <span class="meta">Le yin garde des tenues longues : minimum 20 min.</span>' : '';
+  html+=`<div class="card"><h2>Durée</h2><p class="sub">Ajuste chaque séance à ton temps disponible.${note}</p>
+    <div class="chips" id="sportTime" style="margin-top:10px">${shown.map(([v,l])=>`<button class="chip ${v===sportMin?'on':''}" data-v="${v}" onclick="setSportMin(${v})">${l}</button>`).join('')}</div></div>`;
   m.sessions.forEach((s,i)=>{
     const raw=resolvePoses(s.poses);
-    const poses=currentStyle==='sport'? scaleSession(raw,sportMin) : raw;
-    const playFn=currentStyle==='sport'? `playStyleScaled('${currentStyle}',${i})` : `playStyle('${currentStyle}',${i})`;
+    const poses=scaleSession(raw,sportMin);
+    const playFn=`playStyleScaled('${currentStyle}',${i})`;
     html+=`<div class="card routine">
       <span class="badge">${s.badge}</span>
       <h2>${s.name}</h2>
@@ -1306,40 +1313,55 @@ function scaleSession(poses,targetMin){
   let tail=[];
   while(base.length>3 && base[base.length-1].t && base[base.length-1].t>=120){ tail.unshift(base.pop()); }
   let tailT=tail.reduce((a,p)=>a+poseDur(p),0);
-  // si la clôture seule dépasse la moitié de la cible, la comprimer aussi
-  if(tailT > target*0.5 && tail.length){
-    const tf=Math.max(.4,(target*0.4)/tailT);
-    tail.forEach(p=>{ if(p.t) p.t=Math.max(60,Math.round(p.t*tf)); });
+  // comprimer la clôture pour qu'elle ne prenne jamais plus de 40% de la cible
+  if(tailT > target*0.4 && tail.length){
+    const tf=Math.max(.25,(target*0.4)/tailT);
+    tail.forEach(p=>{ if(p.t) p.t=Math.max(45,Math.round(p.t*tf)); });
     tailT=tail.reduce((a,p)=>a+poseDur(p),0);
   }
   const budget=Math.max(target-tailT, target*0.5);
   let bodyT=base.reduce((a,p)=>a+poseDur(p),0);
   const f=budget/Math.max(bodyT,1);
-  // borner le facteur pour rester réaliste
-  const cf=Math.max(.6,Math.min(2.2,f));
+  // bornes de compression : plus permissives quand on réduit fortement
+  const loF = f<1 ? 0.35 : 0.6;
+  const minB = f<0.7 ? 2 : 3;
+  const minT = f<0.7 ? 20 : 30;
+  const cf=Math.max(loF,Math.min(2.2,f));
   base.forEach(p=>{
-    if(p.b) p.b=Math.max(3,Math.min(30,Math.round(p.b*cf)));
-    else if(p.t) p.t=Math.max(30,Math.min(600,Math.round(p.t*cf)));
+    if(p.b) p.b=Math.max(minB,Math.min(30,Math.round(p.b*cf)));
+    else if(p.t) p.t=Math.max(minT,Math.min(600,Math.round(p.t*cf)));
   });
-  // si encore trop court, répéter le corps (hors répétitions immédiates)
   bodyT=base.reduce((a,p)=>a+poseDur(p),0);
+  // si trop long : retirer des postures du corps (une sur deux d'abord) avant de tomber sous la cible
+  while(base.length>3 && bodyT+tailT > target*1.15){
+    // retirer la posture la plus longue du corps pour converger vite
+    let mi=0; for(let k=1;k<base.length;k++){ if(poseDur(base[k])>poseDur(base[mi])) mi=k; }
+    bodyT-=poseDur(base[mi]); base.splice(mi,1);
+  }
+  // si encore trop court, répéter le corps
   let guard=0;
   while(bodyT+tailT < target*0.9 && guard<40){
     const src=base[guard % base.length];
     const clone={...src};
     base.push(clone); bodyT+=poseDur(clone); guard++;
   }
-  // si trop long, retirer depuis la fin du corps
-  while(base.length>2 && bodyT+tailT > target*1.15){
-    const rm=base.pop(); bodyT-=poseDur(rm);
-  }
   return [...base,...tail];
 }
 function sportDur(poses){ return scaleSession(poses,sportMin).reduce((a,p)=>a+poseDur(p),0); }
 function setSportMin(v){
   sportMin=v; store.set('sportMin',v);
-  document.querySelectorAll('#sportTime .chip').forEach(c=>c.classList.toggle('on',+c.dataset.v===v));
+  renderAshTime();
   applyStyle();
+  // fermer les aperçus de séries ouverts et rafraîchir les totaux
+  ['s1','s2','s3','s4'].forEach(id=>{ const pv=document.getElementById('pv-'+id); if(pv){pv.style.display='none';pv.innerHTML='';} });
+  updateAshTotals();
+}
+function updateAshTotals(){
+  const set=(id,poses)=>{ const el=document.getElementById(id); if(el) el.textContent=fmtDur(totalDur(scaleSession(poses,sportMin))); };
+  set('ashTotal', ASH.flatMap(s=>s.poses));
+  set('ash2Total', s2All());
+  set('ash3Total', sXAll(ASH3));
+  set('ash4Total', sXAll(ASH4));
 }
 function playStyleScaled(style,i){
   const s=STYLE_MENUS[style].sessions[i];
@@ -1915,20 +1937,24 @@ function sXAll(series){
   ];
 }
 function playAshtanga3(what){
-  const poses = what==='all' ? sXAll(ASH3) : ASH3.find(s=>s.id===what).poses;
+  let poses = what==='all' ? sXAll(ASH3) : ASH3.find(s=>s.id===what).poses;
+  if(what==='all') poses=scaleSession(poses,sportMin);
   startSession(poses, what==='all' ? 'Ashtanga · série 3' : ASH3.find(s=>s.id===what).name);
 }
 function playAshtanga4(what){
-  const poses = what==='all' ? sXAll(ASH4) : ASH4.find(s=>s.id===what).poses;
+  let poses = what==='all' ? sXAll(ASH4) : ASH4.find(s=>s.id===what).poses;
+  if(what==='all') poses=scaleSession(poses,sportMin);
   startSession(poses, what==='all' ? 'Ashtanga · série 4' : ASH4.find(s=>s.id===what).name);
 }
 function playAshtanga2(what){
-  const poses = what==='all' ? s2All() : ASH2.find(s=>s.id===what).poses;
+  let poses = what==='all' ? s2All() : ASH2.find(s=>s.id===what).poses;
+  if(what==='all') poses=scaleSession(poses,sportMin);
   const title = what==='all' ? 'Ashtanga · série 2' : ASH2.find(s=>s.id===what).name;
   startSession(poses,title);
 }
 function playAshtanga(what){
-  const poses = what==='all' ? ASH.flatMap(s=>s.poses) : ASH.find(s=>s.id===what).poses;
+  let poses = what==='all' ? ASH.flatMap(s=>s.poses) : ASH.find(s=>s.id===what).poses;
+  if(what==='all') poses=scaleSession(poses,sportMin);
   const title = what==='all' ? 'Ashtanga · série 1' : 'Ashtanga · '+ASH.find(s=>s.id===what).name;
   startSession(poses,title);
 }
@@ -1936,6 +1962,27 @@ function playRoutine(i){ startSession(ROUTINES[i].poses,'Routine · '+ROUTINES[i
 function playCustom(){
   if(!mySeq.length){ toast('Ta séquence est vide'); return; }
   startSession(mySeq,'Ma séquence');
+}
+
+/* Aperçu des séries Ashtanga (scalé à la durée choisie) sans démarrer */
+function seriesPoses(id){
+  if(id==='s1') return scaleSession(ASH.flatMap(s=>s.poses),sportMin);
+  if(id==='s2') return scaleSession(s2All(),sportMin);
+  if(id==='s3') return scaleSession(sXAll(ASH3),sportMin);
+  if(id==='s4') return scaleSession(sXAll(ASH4),sportMin);
+  return [];
+}
+function previewSeries(id,btn){
+  const pv=document.getElementById('pv-'+id); if(!pv) return;
+  const open=pv.style.display==='block';
+  if(open){ pv.style.display='none'; pv.innerHTML=''; btn.textContent='▾ Voir la séance'; }
+  else{ pv.innerHTML=posePreview(seriesPoses(id)).replace('<div class="preview">','<div>').replace(/<\/div>$/,'</div>'); pv.style.display='block'; btn.textContent='▴ Masquer'; }
+}
+/* Sélecteur de durée Ashtanga (partage sportMin) */
+function renderAshTime(){
+  const el=document.getElementById('ashTime'); if(!el) return;
+  const opts=[[0,'Native'],[10,'10\u2032'],[15,'15\u2032'],[20,'20\u2032'],[30,'30\u2032'],[45,'45\u2032'],[60,'1 h']];
+  el.innerHTML=opts.map(([v,l])=>`<button class="chip ${v===sportMin?'on':''}" onclick="setSportMin(${v})">${l}</button>`).join('');
 }
 
 function startSession(poses,title){
@@ -2043,14 +2090,12 @@ function renderBrSettings(){
    THÈMES
 ===================================================== */
 const THEMES=[
-  {k:'dark',   label:'Sombre', bg:'#08252e', ac:'#6fd6c9'},
   {k:'light',  label:'Clair',  bg:'#f4f7f6', ac:'#0f8a7d'},
 ];
-let theme=store.get('theme','dark');
+let theme='light';
 function applyTheme(){
-  if(!THEMES.some(t=>t.k===theme)) theme='dark';
-  if(theme==='dark') document.body.removeAttribute('data-theme');
-  else document.body.setAttribute('data-theme',theme);
+  theme='light';
+  document.body.setAttribute('data-theme','light');
   const t=THEMES.find(x=>x.k===theme)||THEMES[0];
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content',t.bg);
@@ -2080,8 +2125,8 @@ document.getElementById('voiceBtn').textContent = TTS ? (voiceOn?'Activé':'Coup
 renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib(); level=store.get('lvl','std');
 currentStyle=store.get('style','ash');
 sportMin=store.get('sportMin',0);
-theme=store.get('theme','dark'); applyTheme();
-renderGenChips(); renderWeek(); renderGenHint(); renderLvlChips(); renderThemeChips(); renderStyleChips(); applyStyle(); checkImport();
+theme='light'; store.set('theme','light'); applyTheme();
+renderGenChips(); renderWeek(); renderGenHint(); renderLvlChips(); renderAshTime(); updateAshTotals(); renderThemeChips(); renderStyleChips(); applyStyle(); checkImport();
 
 /* PWA — service worker (HTTPS requis) */
 if('serviceWorker' in navigator){
