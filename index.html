@@ -21,8 +21,22 @@
   --ink:#e8f3f1;
   --dim:#8fb3ae;
   --line:rgba(111,214,201,.18);
+  --line2:rgba(111,214,201,.1);
+  --glow:rgba(111,214,201,.14);
+  --orb1:rgba(111,214,201,.55);
+  --orb2:rgba(111,214,201,.12);
+  --orb3:rgba(111,214,201,.25);
+  --bar:rgba(8,37,46,.92);
   --radius:16px;
 }
+body[data-theme="light"]{
+  --deep:#f4f7f6; --deep2:#ffffff; --deep3:#e4edeb;
+  --aqua:#0f8a7d; --air:#b9761a; --ink:#0c313d; --dim:#5c7772;
+  --line:rgba(15,138,125,.22); --line2:rgba(15,138,125,.12); --glow:rgba(15,138,125,.1);
+  --orb1:rgba(15,138,125,.45); --orb2:rgba(15,138,125,.1); --orb3:rgba(15,138,125,.2);
+  --bar:rgba(244,247,246,.94);
+}
+
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
 body{
@@ -50,7 +64,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 /* ---------- Onglets ---------- */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
-  display:flex;background:rgba(8,37,46,.92);backdrop-filter:blur(10px);
+  display:flex;background:var(--bar);backdrop-filter:blur(10px);
   border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);
 }
@@ -93,7 +107,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .sec.open .sec-body{display:block}
 .pose{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:9px 2px;border-bottom:1px dashed rgba(111,214,201,.1);font-size:.9rem;
+  padding:9px 2px;border-bottom:1px dashed var(--line2);font-size:.9rem;
 }
 .pose:last-child{border-bottom:none}
 .pose .fr{color:var(--dim);font-size:.76rem;display:block;margin-top:1px}
@@ -138,7 +152,7 @@ select{
   background:var(--deep3);border:1px solid var(--line);border-radius:10px;
   color:var(--ink);font-family:inherit;font-size:.88rem;padding:8px 10px;
 }
-.saved{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px;border-bottom:1px dashed rgba(111,214,201,.1)}
+.saved{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px;border-bottom:1px dashed var(--line2)}
 
 /* ---------- Générateur ---------- */
 .chip{
@@ -146,12 +160,12 @@ select{
   font-size:.82rem;color:var(--dim);font-weight:600;transition:.15s ease;
 }
 .chip.on{background:var(--aqua);color:var(--deep);border-color:var(--aqua)}
-.gen-pose{display:flex;justify-content:space-between;gap:8px;padding:6px 2px;font-size:.85rem;border-bottom:1px dashed rgba(111,214,201,.08)}
+.gen-pose{display:flex;justify-content:space-between;gap:8px;padding:6px 2px;font-size:.85rem;border-bottom:1px dashed var(--line2)}
 .gen-pose .b{color:var(--air);font-size:.76rem;white-space:nowrap}
 .balbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:10px 0 6px;background:var(--deep3)}
 .balbar i{display:block;height:100%}
 .preview{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
-.pv-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(111,214,201,.1)}
+.pv-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line2)}
 .pv-row:last-child{border-bottom:none}
 .pv-nm{flex:1;min-width:0;font-size:.86rem}
 .pv-nm small{display:block;color:var(--dim);font-size:.72rem}
@@ -179,8 +193,8 @@ select{
 }
 .breath .orb{
   position:absolute;width:60%;height:60%;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%, rgba(111,214,201,.55), rgba(111,214,201,.12) 70%);
-  box-shadow:0 0 60px rgba(111,214,201,.25);
+  background:radial-gradient(circle at 35% 35%, var(--orb1), var(--orb2) 70%);
+  box-shadow:0 0 60px var(--orb3);
   transform:scale(.7);
 }
 /* Animation du cercle : Web Animations API (deux vitesses inspir/expir) */
@@ -223,13 +237,13 @@ select{
 <body>
 
 <header class="hero">
-  <span class="ver mono">v2.1.0</span>
+  <span class="ver mono">v2.3.0</span>
   <h1>Tapis <span>·</span> yoga</h1>
   <p>Séances équilibrées avant / arrière, centrées sur le souffle : extensions, torsions, inversions. La série 1 quand tu veux la tradition.</p>
   <div class="waves" aria-hidden="true">
     <svg viewBox="0 0 1200 46" preserveAspectRatio="none">
       <path d="M0 24 Q75 4 150 24 T300 24 T450 24 T600 24 T750 24 T900 24 T1050 24 T1200 24 V46 H0 Z" fill="#0c313d"/>
-      <path d="M0 32 Q75 16 150 32 T300 32 T450 32 T600 32 T750 32 T900 32 T1050 32 T1200 32 V46 H0 Z" fill="rgba(111,214,201,.14)"/>
+      <path d="M0 32 Q75 16 150 32 T300 32 T450 32 T600 32 T750 32 T900 32 T1050 32 T1200 32 V46 H0 Z" fill="var(--glow)"/>
     </svg>
   </div>
 </header>
@@ -374,6 +388,10 @@ select{
       <span>Écran allumé pendant la séance</span>
       <span class="meta" id="wakeInfo">auto</span>
     </div>
+    <div class="set-row">
+      <span>Thème</span>
+    </div>
+    <div class="chips" id="themeChips" style="margin-top:-4px"></div>
     <div class="set-row">
       <span>Niveau de pratique</span>
     </div>
@@ -2021,6 +2039,31 @@ function renderBrSettings(){
   document.getElementById('expVal').textContent=expir+' s';
   document.getElementById('cadTotal').textContent=cadence+' s';
 }
+/* =====================================================
+   THÈMES
+===================================================== */
+const THEMES=[
+  {k:'dark',   label:'Sombre', bg:'#08252e', ac:'#6fd6c9'},
+  {k:'light',  label:'Clair',  bg:'#f4f7f6', ac:'#0f8a7d'},
+];
+let theme=store.get('theme','dark');
+function applyTheme(){
+  if(!THEMES.some(t=>t.k===theme)) theme='dark';
+  if(theme==='dark') document.body.removeAttribute('data-theme');
+  else document.body.setAttribute('data-theme',theme);
+  const t=THEMES.find(x=>x.k===theme)||THEMES[0];
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute('content',t.bg);
+}
+function setTheme(k){ theme=k; store.set('theme',k); applyTheme(); renderThemeChips(); }
+function renderThemeChips(){
+  const el=document.getElementById('themeChips'); if(!el) return;
+  el.innerHTML=THEMES.map(t=>`
+    <button class="chip ${t.k===theme?'on':''}" onclick="setTheme('${t.k}')" style="display:inline-flex;align-items:center;gap:7px">
+      <span style="width:14px;height:14px;border-radius:50%;background:${t.bg};border:2px solid ${t.ac};flex:none"></span>${t.label}
+    </button>`).join('');
+}
+
 function toggleSnd(){
   sound=!sound; store.set('snd',sound);
   document.getElementById('sndBtn').textContent=sound?'Activé':'Coupé';
@@ -2037,7 +2080,8 @@ document.getElementById('voiceBtn').textContent = TTS ? (voiceOn?'Activé':'Coup
 renderAsh(); renderRoutines(); renderSeq(); renderSaved(); renderLibFilter(); renderLib(); level=store.get('lvl','std');
 currentStyle=store.get('style','ash');
 sportMin=store.get('sportMin',0);
-renderGenChips(); renderWeek(); renderGenHint(); renderLvlChips(); renderStyleChips(); applyStyle(); checkImport();
+theme=store.get('theme','dark'); applyTheme();
+renderGenChips(); renderWeek(); renderGenHint(); renderLvlChips(); renderThemeChips(); renderStyleChips(); applyStyle(); checkImport();
 
 /* PWA — service worker (HTTPS requis) */
 if('serviceWorker' in navigator){
