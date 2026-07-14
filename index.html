@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#08252e">
-<title>Yoga — Routines</title>
+<title>Yoga 2.0 — Routines</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -237,8 +237,8 @@ select{
 <body>
 
 <header class="hero">
-  <span class="ver mono">v2.4.0</span>
-  <h1>Yoga</h1>
+  <span class="ver mono">v2.6.1</span>
+  <h1>Yoga <span>2.0</span></h1>
   <p>Séances équilibrées avant / arrière, centrées sur le souffle : extensions, torsions, inversions. La série 1 quand tu veux la tradition.</p>
   <div class="waves" aria-hidden="true">
     <svg viewBox="0 0 1200 46" preserveAspectRatio="none">
@@ -932,7 +932,7 @@ async function shareSeq(){
   const name=match? match.name : 'Ma séquence';
   const url=location.origin+location.pathname+'?s='+encodeSeq(name,mySeq);
   try{
-    if(navigator.share){ await navigator.share({title:'Yoga — '+name, url}); return; }
+    if(navigator.share){ await navigator.share({title:'Yoga 2.0 — '+name, url}); return; }
   }catch(e){ return; } /* partage annulé */
   try{ await navigator.clipboard.writeText(url); toast('Lien copié ✓'); }
   catch(e){ prompt('Copie ce lien :', url); }
