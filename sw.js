@@ -1,5 +1,5 @@
 /* Yoga — service worker */
-const VERSION = 'yoga-v2.7.0';
+const VERSION = 'yoga-v2.7.1';
 const CORE = [
   './',
   './index.html',
